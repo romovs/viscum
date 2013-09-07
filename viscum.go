@@ -60,6 +60,9 @@ func main() {
 	}
 	cmp.RegisterElement(&win.Element)
 	
+	win.Button(ms, func () { log.Debug("Button clicked!") }, 70, 80, 60, 20, 3)
+	
+
 	// create test app #2
 	win = new(toolkit.Window)
 	err = win.Init(fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100, 2)

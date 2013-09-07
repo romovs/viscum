@@ -22,12 +22,16 @@ const (
 )
 
 type IElement interface {
+	UpdateScreenX(int)
+	UpdateScreenY(int)
+	
 	ColorModel() color.Model
 	Bounds() image.Rectangle
 	At(x, y int) color.Color
 	Set(x, y int, c color.Color)
 	
 	mouse(int, int, int, int, byte) 
+	Draw()
 }
 
 type Element struct {
@@ -37,6 +41,8 @@ type Element struct {
 	Z			int
 	Width		int
 	Height		int
+	ScreenX		int 
+	ScreenY		int
 	Buffer		[]byte
 }
 
@@ -88,6 +94,14 @@ func (e *Element) Set(x, y int, c color.Color) {
 	}*/
 }
 
+
+func (e *Element) UpdateScreenX(deltaX int) {
+	e.ScreenX += deltaX
+}
+
+func (e *Element) UpdateScreenY(deltaY int) {
+	e.ScreenY += deltaY
+}
 /*func (o *Element) Dr(fb *fbdev.Framebuffer, x, y, width, height int) {
 	
 	rect := image.Rectangle{
