@@ -31,7 +31,7 @@ func (desk *Desktop) Init(fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64
 	desk.Element = Element{
 		Width: 		int(fb.Vinfo.Xres),
 		Height: 	int(fb.Vinfo.Yres),
-		Buffer: 	make([]byte, 1024*768*4),
+		Buffer: 	make([]byte, fb.Vinfo.Xres*fb.Vinfo.Yres*4),
 		InvMsgPipe: imp,
 		X:			0,
 		Y: 			0,

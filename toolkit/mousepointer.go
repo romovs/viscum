@@ -30,7 +30,7 @@ func (app *MousePointer) Init(fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan i
 		Y: 				int(fb.Vinfo.Yres/2),
 		Width: 			WIDTH,
 		Height:			WIDTH,
-		Buffer: 		make([]byte, 8*8*4),
+		Buffer: 		make([]byte, WIDTH*WIDTH*4),
 		InvMsgPipe:		imp,
 	}
 	

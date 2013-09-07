@@ -30,7 +30,7 @@ func (win *Window) Init(fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64, 
 		Y: 			y,
 		Width: 		w,
 		Height:		h,
-		Buffer: 	make([]byte, 1024*768*4),
+		Buffer: 	make([]byte, w*h*4),
 		InvMsgPipe: imp,
 	}
 	
