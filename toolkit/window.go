@@ -70,11 +70,11 @@ func (win *Window) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 	// drag only if clicked inside titlebar. it's enoguh to check Y position. because X will be anyway inside the window bounds
 	if win.Element.Y + deltaY <= y && y <= win.Element.Y + deltaY + win.titleBarHeight{
 	
-		if (flags & mouse.BTN_FLAG_LEFT_CLICK) != 0 {
-			log.Debug("Window ms handler: BTN_FLAG_LEFT_CLICK")
+		if (flags & mouse.F_LEFT_CLICK) != 0 {
+			log.Debug("Window ms handler: F_LEFT_CLICK")
 			win.wasClicked = true
-		} else if win.wasClicked && (flags & mouse.BTN_FLAG_LEFT_HOLD) != 0 {
-			log.Debug("Window ms handler: BTN_FLAG_LEFT_HOLD")
+		} else if win.wasClicked && (flags & mouse.F_LEFT_HOLD) != 0 {
+			log.Debug("Window ms handler: F_LEFT_HOLD")
 			win.Element.X += deltaX
 			win.Element.Y += deltaY
 			win.Element.ScreenX += deltaX

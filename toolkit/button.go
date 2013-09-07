@@ -62,20 +62,25 @@ func (but *Button) Draw() {
 // mouse handler
 func (but *Button) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 
-	if (flags & mouse.BTN_FLAG_LEFT_CLICK) != 0 {
-		log.Debug("Button ms handler: BTN_FLAG_LEFT_CLICK")
+	if (flags & mouse.F_LEFT_CLICK) != 0 {
+		log.Debug("Button ms handler: clicked inside.")
 		but.wasClicked = true
 		// visualise the click
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width,  49, 80, 0, 0)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
- 	} else if but.wasClicked && (flags & mouse.BTN_FLAG_LEFT_CLICK) == 0 && (flags & mouse.BTN_FLAG_LEFT_HOLD) == 0 {
-		log.Debug("Button ms handler: L btn release")
+ 	} else if but.wasClicked && (flags & mouse.F_LEFT_CLICK) == 0 && (flags & mouse.F_LEFT_HOLD) == 0 {
+		log.Debug("Button ms handler: clicked & released inside.")
 		but.wasClicked = false
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
 		but.Click()
+	} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
+		// release the button if user clicked inside it and then draged the mouse outisde without releasing the mouse button
+		log.Debug("Button ms handler: clicked inside. released outside.")
+		but.wasClicked = false
+		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
+		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
 	} else {
 		log.Debug("Button ms handler: do nothing...")
-		but.wasClicked = false
 	}
 }

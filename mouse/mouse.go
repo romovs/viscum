@@ -32,7 +32,7 @@ type Mouse struct {
 	
 	Cb				[]*Callback
 	CbIndex 		uint32
-	
+
 	mouseHndr		mouseHandler
 	
 	leftPressed		bool
@@ -56,15 +56,17 @@ type Callback struct {
 	y			*int
 	width		int
 	height		int
+	isMouseIn	bool		// specifies whether mouse was inside the lement on previous MMP
 }
 
 const (
-	
-	BTN_FLAG_LEFT_HOLD			= 2
-	BTN_FLAG_LEFT_HOLD_RELEASE	= 4
-	BTN_FLAG_RIGTH_HOLD			= 2
-	BTN_FLAG_RIGTH_HOLD_RELEASE	= 4
-	BTN_FLAG_LEFT_CLICK			= 8
+	F_LEFT_HOLD				= 2
+	F_LEFT_HOLD_RELEASE		= 4
+	F_RIGTH_HOLD			= 2
+	F_RIGTH_HOLD_RELEASE	= 4
+	F_LEFT_CLICK			= 8
+	F_EL_ENTER				= 16
+	F_EL_LEAVE				= 32
 )
 
 
@@ -142,40 +144,42 @@ func (ms *Mouse) Process() (error) {
 
 		if mmp.BtnLeft() && !ms.leftPressed {
 			ms.leftPressed = true
-			ms.flags |= BTN_FLAG_LEFT_CLICK
+			ms.flags |= F_LEFT_CLICK
 			log.Debug("Mouse: L btn press")
-		} else if mmp.BtnLeft() && ms.leftPressed && (ms.flags & BTN_FLAG_LEFT_HOLD) == 0 {
-			ms.flags |= BTN_FLAG_LEFT_HOLD
-			ms.flags &^= BTN_FLAG_LEFT_CLICK
+		} else if mmp.BtnLeft() && ms.leftPressed && (ms.flags & F_LEFT_HOLD) == 0 {
+			ms.flags |= F_LEFT_HOLD
+			ms.flags &^= F_LEFT_CLICK
 			log.Debug("Mouse: L btn hold")
-		} else if !mmp.BtnLeft() && ((ms.flags & BTN_FLAG_LEFT_HOLD) != 0){	
-			ms.flags &^= BTN_FLAG_LEFT_HOLD
+		} else if !mmp.BtnLeft() && ((ms.flags & F_LEFT_HOLD) != 0){	
+			ms.flags &^= F_LEFT_HOLD
 			ms.leftPressed = false
 			log.Debug("Mouse: L btn release after hold")
-		} else if !mmp.BtnLeft() && ((ms.flags & BTN_FLAG_LEFT_CLICK) != 0){	
-			ms.flags &^= BTN_FLAG_LEFT_CLICK
+		} else if !mmp.BtnLeft() && ((ms.flags & F_LEFT_CLICK) != 0){	
+			ms.flags &^= F_LEFT_CLICK
 			ms.leftPressed = false
 			log.Debug("Mouse: L btn release")
 		} 
 		
 		// call mouse handlers whenever mouse pointer enters registered element
 		for i := 0; i < int(ms.CbIndex); i++ {
-		
-			if (ms.flags & BTN_FLAG_LEFT_HOLD) == 0 {
-		 		if *(ms.Cb[i].x) < ms.xPos && *(ms.Cb[i].x) + ms.Cb[i].width > ms.xPos &&
-				   *(ms.Cb[i].y) < ms.yPos && *(ms.Cb[i].y) + ms.Cb[i].height > ms.yPos {
-	
-					log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
-	
+
+	 		if (*(ms.Cb[i].x) < ms.xPos && *(ms.Cb[i].x) + ms.Cb[i].width > ms.xPos &&
+			   *(ms.Cb[i].y) < ms.yPos && *(ms.Cb[i].y) + ms.Cb[i].height > ms.yPos) ||
+			   (*(ms.Cb[i].x) < oldXpos && *(ms.Cb[i].x) + ms.Cb[i].width > oldXpos &&	// accout for any element movement
+			   *(ms.Cb[i].y) < oldYpos && *(ms.Cb[i].y) + ms.Cb[i].height > oldYpos) {
+
+				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
+
+				if !ms.Cb[i].isMouseIn {	// pointer entered the element`s area
+					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_ENTER)
+					ms.Cb[i].isMouseIn = true
+				} else {					// pointer moved within the element`s area
 					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
 				}
 			} else {
-		 		if *(ms.Cb[i].x) < oldXpos && *(ms.Cb[i].x) + ms.Cb[i].width > oldXpos &&
-				   *(ms.Cb[i].y) < oldYpos && *(ms.Cb[i].y) + ms.Cb[i].height > oldYpos {
-	
-					log.Debugf("Mouse: L HOLD: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
-	
-					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
+				if ms.Cb[i].isMouseIn {		// pointer left the element`s area
+					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_LEAVE)
+					ms.Cb[i].isMouseIn = false
 				}
 			}
 	    }
