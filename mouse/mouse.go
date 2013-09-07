@@ -148,8 +148,12 @@ func (ms *Mouse) Process() (error) {
 			ms.flags |= BTN_FLAG_LEFT_HOLD
 			ms.flags &^= BTN_FLAG_LEFT_CLICK
 			log.Debug("Mouse: L btn hold")
-		} else if !mmp.BtnLeft() && ms.leftPressed {	
+		} else if !mmp.BtnLeft() && ((ms.flags & BTN_FLAG_LEFT_HOLD) != 0){	
 			ms.flags &^= BTN_FLAG_LEFT_HOLD
+			ms.leftPressed = false
+			log.Debug("Mouse: L btn release after hold")
+		} else if !mmp.BtnLeft() && ((ms.flags & BTN_FLAG_LEFT_CLICK) != 0){	
+			ms.flags &^= BTN_FLAG_LEFT_CLICK
 			ms.leftPressed = false
 			log.Debug("Mouse: L btn release")
 		} 
@@ -161,7 +165,7 @@ func (ms *Mouse) Process() (error) {
 		 		if *(ms.Cb[i].x) < ms.xPos && *(ms.Cb[i].x) + ms.Cb[i].width > ms.xPos &&
 				   *(ms.Cb[i].y) < ms.yPos && *(ms.Cb[i].y) + ms.Cb[i].height > ms.yPos {
 	
-					log.Debugf("Mouse: L HOLD: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
+					log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
 	
 					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
 				}
@@ -169,7 +173,7 @@ func (ms *Mouse) Process() (error) {
 		 		if *(ms.Cb[i].x) < oldXpos && *(ms.Cb[i].x) + ms.Cb[i].width > oldXpos &&
 				   *(ms.Cb[i].y) < oldYpos && *(ms.Cb[i].y) + ms.Cb[i].height > oldYpos {
 	
-					log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
+					log.Debugf("Mouse: L HOLD: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
 	
 					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
 				}
