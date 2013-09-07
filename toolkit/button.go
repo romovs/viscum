@@ -65,8 +65,16 @@ func (but *Button) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 	if (flags & mouse.BTN_FLAG_LEFT_CLICK) != 0 {
 		log.Debug("Button ms handler: BTN_FLAG_LEFT_CLICK")
 		but.wasClicked = true
+		// visualise the click
+		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width,  49, 80, 0, 0)	
+		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
+ 	} else if but.wasClicked && (flags & mouse.BTN_FLAG_LEFT_CLICK) == 0 && (flags & mouse.BTN_FLAG_LEFT_HOLD) == 0 {
+		log.Debug("Button ms handler: L btn release")
+		but.wasClicked = false
+		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
+		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
 		but.Click()
-	}  else {
+	} else {
 		log.Debug("Button ms handler: do nothing...")
 		but.wasClicked = false
 	}
