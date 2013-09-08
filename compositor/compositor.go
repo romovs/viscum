@@ -5,20 +5,17 @@ import (
 	"image"
 	"image/draw"
 	log "github.com/cihub/seelog"
-	"time"
 	"toolkit"
+	"container/list"
 )
 
 type Compositor struct {
 	fb 					*fbdev.Framebuffer
-	Elms				[]*toolkit.Element
-	ElmsCnt				int
+	Elms				*list.List
 	InvMsgPipe 			chan int64
 	
 	MouseWait			chan bool
 	CompositorRelease	chan bool
-	
-	lastInv		time.Time
 }
 
 
@@ -26,12 +23,10 @@ func Init(fb *fbdev.Framebuffer) (*Compositor) {
 
 	c := &Compositor{
 		fb: 				fb,
-		Elms: 				make([]*toolkit.Element, 128),
+		Elms: 				list.New(),
 		InvMsgPipe: 		make(chan int64, 128),
 		MouseWait: 			make(chan bool, 1),
 		CompositorRelease:	make(chan bool, 1),
-		ElmsCnt: 			0,
-		lastInv:			time.Now(),
 	} 
 
 	c.CompositorRelease<- false
@@ -47,8 +42,9 @@ func (c *Compositor) Compose() {
 				
 		<-c.MouseWait
 
-		for i := 0; i < c.ElmsCnt; i++ {
-			RenderElement(c.fb, c.Elms[i], c.Elms[i].X, c.Elms[i].Y, c.Elms[i].Width, c.Elms[i].Height)
+		for v := c.Elms.Back(); v != nil; v = v.Prev() {
+			e := v.Value.(*toolkit.Element)
+			RenderElement(c.fb, e, e.X, e.Y, e.Width, e.Height)
 		}
 
 		flush(c)
@@ -62,8 +58,7 @@ func flush(c *Compositor) {
 }
 
 func (c *Compositor) RegisterElement(e *toolkit.Element) {
-	c.Elms[c.ElmsCnt] = e
-	c.ElmsCnt++
+	c.Elms.PushFront(e)
 }
 
 func RenderElement(fb *fbdev.Framebuffer, o *toolkit.Element, x, y, width, height int) {
