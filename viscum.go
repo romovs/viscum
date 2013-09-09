@@ -28,23 +28,25 @@ func main() {
 	defer fb.Close()
 
 	// initialize compositor
-	cmp := compositor.Init(fb)
+	cmp := compositor.CreateCompositor(fb)
 	go cmp.Compose()
-
+	
 	// TODO: initialize touchscreen handler
 
-	// initialize mouse handler
-	ms, err := mouse.Init("/dev/input/mice", fb, cmp.MouseWait, cmp.CompositorRelease)
+	// initialize mouse handler & create the pointer
+	ms, err := mouse.Init("/dev/input/mice", int(fb.Vinfo.Xres), int(fb.Vinfo.Yres), cmp.MouseWait, cmp.CompositorRelease, cmp.WindowList)
 	if err != nil {
 		log.Critical(err)
 		return
 	}
 	defer ms.Close()
 	go ms.Process()
+	
+	mp := ms.CreatePointer(fb, cmp.InvMsgPipe)
+	cmp.RegisterMousePointer(&mp.Element)
 
 	// create desktop
-	desk := new(toolkit.Desktop)
-	err = desk.Init(fb, ms, cmp.InvMsgPipe, 50, 107, 89, 0)
+	desk, err := toolkit.CreateDesktop(fb, ms, cmp.InvMsgPipe, 50, 107, 89, 0)
 	if err != nil {
 		log.Critical(err)
 		return
@@ -52,34 +54,22 @@ func main() {
 	cmp.RegisterElement(&desk.Element)
 	
 	// create test app #1
-	win := new(toolkit.Window)
-	err = win.Init(fb, ms, cmp.InvMsgPipe, 132, 345, 200, 200, 1)
+	var win *toolkit.Window;
+	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 200, 200)
 	if err != nil {
 		log.Critical(err)
 		return
 	}
 	cmp.RegisterElement(&win.Element)
+	win.Button(ms, func () { log.Debug("Button clicked!") }, 70, 80, 60, 20)
 	
-	win.Button(ms, func () { log.Debug("Button clicked!") }, 70, 80, 60, 20, 3)
-	
-
 	// create test app #2
-	win = new(toolkit.Window)
-	err = win.Init(fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100, 2)
+	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100)
 	if err != nil {
 		log.Critical(err)
 		return
 	}
 	cmp.RegisterElement(&win.Element)
-	
-	// create mouse pointer
-	mp := new(toolkit.MousePointer)
-	err = mp.Init(fb, ms, cmp.InvMsgPipe)
-	if err != nil {
-		log.Critical(err)
-		return
-	}
-	cmp.RegisterElement(&mp.Element)
 	
 	
 	/*f, err := os.Open("test.png")

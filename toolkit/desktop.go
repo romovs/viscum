@@ -7,12 +7,12 @@ import (
 	"fbdev"
 	"mouse"
 	"gfx"
+	"toolkit/base"
 )
 
 type Desktop struct {
-	Element
+	base.Element
 	fb			*fbdev.Framebuffer
-	
 	red			byte
 	green		byte
 	blue		byte
@@ -20,25 +20,26 @@ type Desktop struct {
 }
 
 
-func (desk *Desktop) Init(fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64, red, green, blue, alpha byte) (error) {
+func CreateDesktop(fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64, red, green, blue, alpha byte) (*Desktop, error) {
 
-	desk.fb = fb
-	desk.red = red
-	desk.green = green
-	desk.blue =	blue
-	desk.alpha = alpha
+	desk := &Desktop{
+		fb: 	fb,
+		red: 	red,
+		green: 	green,
+		blue:	blue,
+		alpha: 	alpha,
+	}
 	
-	desk.Element = Element{
+	desk.Element = base.Element{
 		Width: 		int(fb.Vinfo.Xres),
 		Height: 	int(fb.Vinfo.Yres),
 		Buffer: 	make([]byte, fb.Vinfo.Xres*fb.Vinfo.Yres*4),
 		InvMsgPipe: imp,
 		X:			0,
 		Y: 			0,
-		Z:			0,
 	}
 	
 	gfx.Clear(desk.Element.Buffer, desk.Element.Width, desk.Element.Height, desk.red, desk.green, desk.blue, desk.alpha)
 
-	return nil
+	return desk, nil
 }

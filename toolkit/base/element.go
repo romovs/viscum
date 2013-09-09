@@ -2,11 +2,11 @@
 // This software is distributed under GNU GPL v2. See LICENSE file.
 
 //=====================================================================================================================
-// All toolkit elements should impliment IElement
+// All toolkit elements should implement IElement
 //=====================================================================================================================
 
 
-package toolkit
+package base
 
 import (
 	"gfx"
@@ -30,20 +30,21 @@ type IElement interface {
 	At(x, y int) color.Color
 	Set(x, y int, c color.Color)
 	
-	mouse(int, int, int, int, byte) 
+	Mouse(int, int, int, int, byte) 
 	Draw()
 }
 
 type Element struct {
-	InvMsgPipe	chan int64
-	X			int
-	Y			int
-	Z			int
-	Width		int
-	Height		int
-	ScreenX		int 
-	ScreenY		int
-	Buffer		[]byte
+	Id				uint64
+	InvMsgPipe		chan int64
+	X				int
+	Y				int
+	Width			int
+	Height			int
+	ScreenX			int 
+	ScreenY			int
+	Buffer			[]byte
+	DeactivateHndr	func()
 }
 
 

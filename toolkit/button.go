@@ -8,32 +8,38 @@ import (
 	"mouse"
 	log "github.com/cihub/seelog"
 	"gfx"
+	"math/rand"
+	"time"
+	"toolkit/base"
 )
 
 type clickHandler func()
 
 type Button struct {
-	Element
+	base.Element
 	parent			*Window
 	fb				*fbdev.Framebuffer
 	wasClicked		bool
-	Click			clickHandler
+	clickHndr		clickHandler
 }
 
 
-func (win *Window) Button(ms *mouse.Mouse, clickHnd clickHandler, x, y, w, h, z int) (*Button) {
+func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int) (*Button) {
 
 	but := &Button{
 		parent: 	win,
 		fb: 		win.fb,
 		wasClicked: false,
-		Click:		clickHnd,
+		clickHndr:		fnClick,
 	}
 	
 	win.Children[win.ChildrenCnt] = but
 	win.ChildrenCnt++
 
-	but.Element = Element{
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))			// FIXME
+
+	but.Element = base.Element{
+		Id:			uint64(r.Int63()),
 		X: 			x,
 		Y: 			y,
 		ScreenX:	win.Element.X+x,
@@ -41,9 +47,10 @@ func (win *Window) Button(ms *mouse.Mouse, clickHnd clickHandler, x, y, w, h, z 
 		Width: 		w,
 		Height:		h,
 		InvMsgPipe: win.InvMsgPipe,
+		
 	}
 	
-	ms.RegisterMouse(but.mouse, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
+	ms.RegisterMouse(but.Element.Id, but.Mouse, nil, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
 	
 	win.Draw()
 	
@@ -60,7 +67,7 @@ func (but *Button) Draw() {
 
 
 // mouse handler
-func (but *Button) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 
 	if (flags & mouse.F_LEFT_CLICK) != 0 {
 		log.Debug("Button ms handler: clicked inside.")
@@ -73,7 +80,7 @@ func (but *Button) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 		but.wasClicked = false
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
-		but.Click()
+		but.clickHndr()
 	} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
 		// release the button if user clicked inside it and then draged the mouse outisde without releasing the mouse button
 		log.Debug("Button ms handler: clicked inside. released outside.")

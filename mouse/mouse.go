@@ -15,6 +15,8 @@ import (
 	"fbdev"
 	log "github.com/cihub/seelog"
 	"utils"
+	"container/list"
+	"toolkit/base"
 )
 
 const(
@@ -24,39 +26,37 @@ const(
 type Mouse struct {
 	dev				*os.File
 	fb				*fbdev.Framebuffer
-	
-	xPos			int		// current X position
-	yPos			int		// current Y position
+	xPos			int				// current X position
+	yPos			int				// current Y position
 	width			int		
 	height			int
-	
-	Cb				[]*Callback
-	CbIndex 		uint32
-
+	cb				[]*Callback
+	cbIndex 		uint32
+	windowList		*list.List		// element list used by the composer
 	mouseHndr		mouseHandler
-	
 	leftPressed		bool
 	rightPressed	bool
 	flags			byte
-	
 	mouseRelease	chan bool
 	compositorWait	chan bool
 }
 
 type MouseMovementPacket struct {
-	Flags		byte
-	X			byte
-	Y			byte
+	Flags			byte
+	X				byte
+	Y				byte
 }
 
 type Callback struct {
-	mouseHndr	mouseHandler
-	entity		interface{}
-	x			*int
-	y			*int
-	width		int
-	height		int
-	isMouseIn	bool		// specifies whether mouse was inside the lement on previous MMP
+	id				uint64
+	mouseHndr		mouseHandler			
+	x				*int
+	y				*int
+	width			int
+	height			int
+	isMouseIn		bool		// specifies whether mouse was inside the element on previous MMP
+	activateHndr	activateHandler
+	flags			byte
 }
 
 const (
@@ -70,27 +70,27 @@ const (
 )
 
 
-func Init(dev string, fb *fbdev.Framebuffer, msRelease chan bool, compWait chan bool) (*Mouse, error) {
+func Init(dev string, screenWidth int, screenHeight int, msRelease chan bool, compWait chan bool, wl *list.List) (*Mouse, error) {
 
 	fd, err := os.OpenFile(dev, os.O_RDONLY, os.ModeDevice)
 	if err != nil {
 		return nil, err
 	}
-
+	
 	ms := &Mouse{
-		fb: 			fb,
 		dev:			fd,
-		Cb: 			make([]*Callback, MAX_ELEMENTS),
-		CbIndex:		0,
+		cb: 			make([]*Callback, MAX_ELEMENTS),
+		cbIndex:		0,
+		windowList:		wl,
 		leftPressed:	false,
 		rightPressed:	false,
 		flags:			0,
 		mouseRelease:	msRelease,
 		compositorWait: compWait,
-		xPos:			int(fb.Vinfo.Xres)/2,		// start in the middle
-		yPos:			int(fb.Vinfo.Yres)/2,
-		width:			int(fb.Vinfo.Xres),
-		height:			int(fb.Vinfo.Yres),
+		xPos:			screenWidth/2,		// start in the middle
+		yPos:			screenHeight/2,
+		width:			screenWidth,
+		height:			screenHeight,
 	}
 
 	return ms, nil
@@ -138,7 +138,7 @@ func (ms *Mouse) Process() (error) {
 		ms.xPos += deltaX
 		ms.yPos += deltaY
 			
-		log.Debugf("Mouse Mov. Deltas: %v : %v    Flags: %v", deltaX, deltaY, mmp.Flags)
+		log.Debugf("Mouse Mov. Deltas: %v : %v    flags: %v", deltaX, deltaY, mmp.Flags)
 		
 		// TODO: handle overflow
 
@@ -160,30 +160,64 @@ func (ms *Mouse) Process() (error) {
 			log.Debug("Mouse: L btn release")
 		} 
 		
+		
+		set := make(map[interface{}]*Callback, MAX_ELEMENTS)
+		
 		// call mouse handlers whenever mouse pointer enters registered element
-		for i := 0; i < int(ms.CbIndex); i++ {
+		for i := 0; i < int(ms.cbIndex); i++ {
 
-	 		if (*(ms.Cb[i].x) < ms.xPos && *(ms.Cb[i].x) + ms.Cb[i].width > ms.xPos &&
-			   *(ms.Cb[i].y) < ms.yPos && *(ms.Cb[i].y) + ms.Cb[i].height > ms.yPos) ||
-			   (*(ms.Cb[i].x) < oldXpos && *(ms.Cb[i].x) + ms.Cb[i].width > oldXpos &&	// accout for any element movement
-			   *(ms.Cb[i].y) < oldYpos && *(ms.Cb[i].y) + ms.Cb[i].height > oldYpos) {
+	 		if (*(ms.cb[i].x) < ms.xPos && *(ms.cb[i].x) + ms.cb[i].width > ms.xPos &&
+			   *(ms.cb[i].y) < ms.yPos && *(ms.cb[i].y) + ms.cb[i].height > ms.yPos) ||
+			   (*(ms.cb[i].x) < oldXpos && *(ms.cb[i].x) + ms.cb[i].width > oldXpos &&	// accout for any element movement
+			   *(ms.cb[i].y) < oldYpos && *(ms.cb[i].y) + ms.cb[i].height > oldYpos) {
 
-				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.Cb[i].x), *(ms.Cb[i].y), ms.Cb[i].width, ms.Cb[i].height)
+				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.cb[i].x), *(ms.cb[i].y), ms.cb[i].width, ms.cb[i].height)
 
-				if !ms.Cb[i].isMouseIn {	// pointer entered the element`s area
-					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_ENTER)
-					ms.Cb[i].isMouseIn = true
-				} else {					// pointer moved within the element`s area
-					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
+				ms.cb[i].flags = ms.flags
+
+				// pointer entered the element`s area
+				if !ms.cb[i].isMouseIn {	
+					ms.cb[i].flags |= F_EL_ENTER
+					ms.cb[i].isMouseIn = true
+				} 
+				
+				// if it's a window - add it to a map so we could find later if it needs activation
+				// otherwise it's a child element and we execute its mouse handler
+				if ms.cb[i].activateHndr == nil  {	// FIXME not a good way to test...
+					ms.cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.cb[i].flags)
+				} else {
+					set[ms.cb[i].id] = ms.cb[i]	
 				}
+
 			} else {
-				if ms.Cb[i].isMouseIn {		// pointer left the element`s area
-					ms.Cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_LEAVE)
-					ms.Cb[i].isMouseIn = false
+				// pointer left the element`s area
+				if ms.cb[i].isMouseIn {		
+					ms.cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_LEAVE)
+					ms.cb[i].isMouseIn = false
 				}
 			}
 	    }
 	    
+	   	// find window with highest Z order 
+	   	curActiveWinId := ms.windowList.Front().Value.(*base.Element).Id
+
+	    for v := ms.windowList.Front(); v != nil; v = v.Next() {
+
+	     	cb := set[v.Value.(*base.Element).Id]
+	    
+			if cb != nil {
+				// execute activation handler only if it's a click and window isn't active already
+				if (cb.flags & F_LEFT_CLICK) != 0 && curActiveWinId != v.Value.(*base.Element).Id {
+					cb.activateHndr()
+				}
+				// execute the mouse handler for this window. after this we don't need to check further
+				// as any of the windows at mouse location had lower Z order and we(partialy) 'hidden'
+				// by the newly activated window
+				cb.mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, cb.flags)
+				break
+			}
+		}
+
 	    // process mouse pointer element handler separately from all other windows
 		ms.mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags)
 
@@ -195,22 +229,27 @@ func (ms *Mouse) Process() (error) {
 
 
 type mouseHandler func(int, int, int, int, byte)
+type activateHandler func()
 
-func (ms *Mouse) RegisterMouse(fnMouse mouseHandler, x *int, y *int, width, height int) {
+
+func (ms *Mouse) RegisterMouse(id uint64, fnMouse mouseHandler, fnActivate activateHandler, x *int, y *int, width, height int) {
 
 	c := &Callback{
-		mouseHndr:	fnMouse,
-		x:			x,
-		y:			y,
-		width:		width,
-		height:		height,
+		id:				id,
+		mouseHndr:		fnMouse,
+		activateHndr:	fnActivate,
+		x:				x,
+		y:				y,
+		width:			width,
+		height:			height,
 	}
 	
-	ms.Cb[ms.CbIndex] = c
-	ms.CbIndex++
+	ms.cb[ms.cbIndex] = c
+	ms.cbIndex++
 	
 	return
 }
+
 
 func (ms *Mouse) RegisterMousePointer(fnMouse mouseHandler) {
 	ms.mouseHndr = fnMouse
