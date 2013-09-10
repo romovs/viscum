@@ -69,7 +69,18 @@ func flush(c *Compositor) {
 }
 
 func (c *Compositor) RegisterElement(e *base.Element) {
+	e.CompRemoveHdnr = c.RemoveElement
 	c.WindowList.PushFront(e)
+}
+
+func (c *Compositor) RemoveElement(id uint64) {
+	for v := c.WindowList.Front(); v != nil; v = v.Next() {
+		e := v.Value.(*base.Element)
+		if e.Id == id {
+			c.WindowList.Remove(v)
+			e.Children.Init()			
+		}
+	}
 }
 
 func (c *Compositor) RegisterMousePointer(mousePointer *base.Element) {

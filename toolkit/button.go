@@ -33,8 +33,7 @@ func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int)
 		clickHndr:		fnClick,
 	}
 	
-	win.Children[win.ChildrenCnt] = but
-	win.ChildrenCnt++
+	win.Children.PushFront(but)
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))			// FIXME
 
@@ -52,7 +51,7 @@ func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int)
 	
 	ms.RegisterMouse(but.Element.Id, but.Mouse, nil, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
 	
-	win.Draw()
+	but.Draw()
 	
 	return but
 }

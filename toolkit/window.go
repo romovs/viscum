@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"time"
 	"toolkit/base"
+	"container/list"
 )
 
 
@@ -19,9 +20,8 @@ type Window struct {
 	fb				*fbdev.Framebuffer
 	wasClicked		bool
 	titleBarHeight	int
-	Children		[]base.IElement
-	ChildrenCnt		int
 	cmpWinActHndr	cmpWinActivateHandler
+	closeButton		*Button
 }
 
 type cmpWinActivateHandler func(uint64)
@@ -34,7 +34,6 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 		fb: 				fb,
 		titleBarHeight: 	20,
 		wasClicked: 		false,
-		Children: 			make([]base.IElement, 128),
 		cmpWinActHndr:		fnCmpWinActivate,
 	}
 
@@ -51,9 +50,21 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 		Buffer: 		make([]byte, w*h*4),
 		InvMsgPipe: 	imp,
 		DeactivateHndr: win.Deactivate,
+		Children: 		list.New(),
 	}
 
 	ms.RegisterMouse(win.Element.Id, win.Mouse, win.activate, &win.Element.ScreenX, &win.Element.ScreenY, w, h)
+	
+	win.closeButton = win.Button(ms, func() {
+		log.Debugf("Window %v exiting...", win.Id)
+		// deregister the window
+		win.Element.CompRemoveHdnr(win.Id)
+		// remove mouse handlers
+		ms.DeregisterMouse(win.Id)
+		for v := win.Children.Front(); v != nil; v = v.Next() {
+			ms.DeregisterMouse(v.Value.(base.IElement).GetId())
+		}	
+	}, w-15, 5, 10, 10)
 	
 	win.Draw()
 
@@ -72,20 +83,24 @@ func (win *Window) Draw() {
 	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, 0)	
 
 	// render children
-	for i := 0; i < win.ChildrenCnt; i++ {
-		win.Children[i].Draw()
-	}
+	for v := win.Children.Front(); v != nil; v = v.Next() {
+		v.Value.(base.IElement).Draw()
+	}	
 }
 
 
 func (win *Window) activate() {
 	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width,  55, 109, 181, 0)	
 	win.cmpWinActHndr(win.Id)
+	// redraw titlebar buttons
+	win.closeButton.Draw()
 }
 
 
 func (win *Window) Deactivate() {
 	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, 0)	
+	// redraw titlebar buttons
+	win.closeButton.Draw()
 }
 
 
@@ -106,10 +121,10 @@ func (win *Window) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 			win.Element.ScreenY += deltaY
 			
 			// update screen position for all the children
-			for i := 0; i < win.ChildrenCnt; i++ {
-				win.Children[i].UpdateScreenX(deltaX)
-				win.Children[i].UpdateScreenY(deltaY)
-			}
+			for v := win.Children.Front(); v != nil; v = v.Next() {
+				v.Value.(base.IElement).UpdateScreenX(deltaX)
+				v.Value.(base.IElement).UpdateScreenY(deltaY)
+			}	
 		} else {
 			log.Debug("Window ms handler: title do nothing...")
 			win.wasClicked = false

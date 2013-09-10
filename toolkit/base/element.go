@@ -12,6 +12,7 @@ import (
 	"gfx"
 	"image/color"
 	"image"
+	"container/list"
 )
 
 const (
@@ -32,6 +33,8 @@ type IElement interface {
 	
 	Mouse(int, int, int, int, byte) 
 	Draw()
+	
+	GetId() uint64
 }
 
 type Element struct {
@@ -45,6 +48,8 @@ type Element struct {
 	ScreenY			int
 	Buffer			[]byte
 	DeactivateHndr	func()
+	Children		*list.List
+	CompRemoveHdnr	func(uint64)
 }
 
 
@@ -103,6 +108,11 @@ func (e *Element) UpdateScreenX(deltaX int) {
 func (e *Element) UpdateScreenY(deltaY int) {
 	e.ScreenY += deltaY
 }
+
+func (e *Element) GetId() (uint64) {
+	return e.Id
+}
+
 /*func (o *Element) Dr(fb *fbdev.Framebuffer, x, y, width, height int) {
 	
 	rect := image.Rectangle{

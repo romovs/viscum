@@ -19,10 +19,6 @@ import (
 	"toolkit/base"
 )
 
-const(
-	MAX_ELEMENTS = 128
-)
-
 type Mouse struct {
 	dev				*os.File
 	fb				*fbdev.Framebuffer
@@ -30,8 +26,7 @@ type Mouse struct {
 	yPos			int				// current Y position
 	width			int		
 	height			int
-	cb				[]*Callback
-	cbIndex 		uint32
+	cb				*list.List
 	windowList		*list.List		// element list used by the composer
 	mouseHndr		mouseHandler
 	leftPressed		bool
@@ -79,8 +74,7 @@ func Init(dev string, screenWidth int, screenHeight int, msRelease chan bool, co
 	
 	ms := &Mouse{
 		dev:			fd,
-		cb: 			make([]*Callback, MAX_ELEMENTS),
-		cbIndex:		0,
+		cb: 			list.New(),
 		windowList:		wl,
 		leftPressed:	false,
 		rightPressed:	false,
@@ -161,39 +155,40 @@ func (ms *Mouse) Process() (error) {
 		} 
 		
 		
-		set := make(map[interface{}]*Callback, MAX_ELEMENTS)
+		set := make(map[interface{}]*Callback, ms.cb.Len())
 		
 		// call mouse handlers whenever mouse pointer enters registered element
-		for i := 0; i < int(ms.cbIndex); i++ {
+		for v := ms.cb.Front(); v != nil; v = v.Next() {
+			cb := v.Value.(*Callback)
+			
+	 		if (*(cb.x) < ms.xPos && *(cb.x) + cb.width > ms.xPos && 
+	 		   *(cb.y) < ms.yPos && *(cb.y) + cb.height > ms.yPos) ||
+			   (*(cb.x) < oldXpos && *(cb.x) + cb.width > oldXpos &&	// accout for any element movement
+			   *(cb.y) < oldYpos && *(cb.y) + cb.height > oldYpos) {
 
-	 		if (*(ms.cb[i].x) < ms.xPos && *(ms.cb[i].x) + ms.cb[i].width > ms.xPos &&
-			   *(ms.cb[i].y) < ms.yPos && *(ms.cb[i].y) + ms.cb[i].height > ms.yPos) ||
-			   (*(ms.cb[i].x) < oldXpos && *(ms.cb[i].x) + ms.cb[i].width > oldXpos &&	// accout for any element movement
-			   *(ms.cb[i].y) < oldYpos && *(ms.cb[i].y) + ms.cb[i].height > oldYpos) {
+				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(cb.x), *(cb.y), cb.width, cb.height)
 
-				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(ms.cb[i].x), *(ms.cb[i].y), ms.cb[i].width, ms.cb[i].height)
-
-				ms.cb[i].flags = ms.flags
+				cb.flags = ms.flags
 
 				// pointer entered the element`s area
-				if !ms.cb[i].isMouseIn {	
-					ms.cb[i].flags |= F_EL_ENTER
-					ms.cb[i].isMouseIn = true
+				if !cb.isMouseIn {	
+					cb.flags |= F_EL_ENTER
+					cb.isMouseIn = true
 				} 
 				
 				// if it's a window - add it to a map so we could find later if it needs activation
 				// otherwise it's a child element and we execute its mouse handler
-				if ms.cb[i].activateHndr == nil  {	// FIXME not a good way to test...
-					ms.cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.cb[i].flags)
+				if cb.activateHndr == nil  {	// FIXME not a good way to test...
+					cb.mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, cb.flags)
 				} else {
-					set[ms.cb[i].id] = ms.cb[i]	
+					set[cb.id] = cb	
 				}
 
 			} else {
 				// pointer left the element`s area
-				if ms.cb[i].isMouseIn {		
-					ms.cb[i].mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_LEAVE)
-					ms.cb[i].isMouseIn = false
+				if cb.isMouseIn {		
+					cb.mouseHndr(ms.xPos, ms.yPos, deltaX, deltaY, ms.flags | F_EL_LEAVE)
+					cb.isMouseIn = false
 				}
 			}
 	    }
@@ -244,12 +239,23 @@ func (ms *Mouse) RegisterMouse(id uint64, fnMouse mouseHandler, fnActivate activ
 		height:			height,
 	}
 	
-	ms.cb[ms.cbIndex] = c
-	ms.cbIndex++
+	ms.cb.PushBack(c)
 	
 	return
 }
 
+func (ms *Mouse) DeregisterMouse(id uint64) {
+
+	for v := ms.cb.Front(); v != nil; v = v.Next() {
+	
+		if v.Value.(*Callback).id == id {
+			
+			log.Debugf("Removing button ")
+			ms.cb.Remove(v)
+			break
+		}
+	}
+}
 
 func (ms *Mouse) RegisterMousePointer(fnMouse mouseHandler) {
 	ms.mouseHndr = fnMouse
