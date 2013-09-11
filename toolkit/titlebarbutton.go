@@ -13,7 +13,8 @@ import (
 	"toolkit/base"
 )
 
-type Button struct {
+
+type TitleBarButton struct {
 	base.Element
 	parent			*Window
 	fb				*fbdev.Framebuffer
@@ -22,13 +23,13 @@ type Button struct {
 }
 
 
-func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int) (*Button) {
+func (win *Window) TitleBarButton(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int) (*TitleBarButton) {
 
-	but := &Button{
+	but := &TitleBarButton{
 		parent: 	win,
 		fb: 		win.fb,
 		wasClicked: false,
-		clickHndr:		fnClick,
+		clickHndr:	fnClick,
 	}
 	
 	win.Children.PushFront(but)
@@ -44,7 +45,6 @@ func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int)
 		Width: 		w,
 		Height:		h,
 		InvMsgPipe: win.InvMsgPipe,
-		
 	}
 	
 	ms.RegisterMouse(but.Element.Id, but.Mouse, nil, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
@@ -55,8 +55,8 @@ func (win *Window) Button(ms *mouse.Mouse, fnClick clickHandler, x, y, w, h int)
 }
 
 
-func (but *Button) Draw() {
-	log.Debug("    Drawing Button")
+func (but *TitleBarButton) Draw() {
+	log.Debug("    Drawing TitleBarButton")
 	
 	gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
 	gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
@@ -64,27 +64,23 @@ func (but *Button) Draw() {
 
 
 // mouse handler
-func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (but *TitleBarButton) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 
 	if (flags & mouse.F_LEFT_CLICK) != 0 {
-		log.Debug("Button ms handler: clicked inside.")
+		log.Debug("TitleBarButton ms handler: clicked inside.")
 		but.wasClicked = true
-		// visualise the click
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width,  49, 80, 0, 0)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
  	} else if but.wasClicked && (flags & mouse.F_LEFT_CLICK) == 0 && (flags & mouse.F_LEFT_HOLD) == 0 {
-		log.Debug("Button ms handler: clicked & released inside.")
+		log.Debug("TitleBarButton ms handler: clicked & released inside.")
 		but.wasClicked = false
-		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
-		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
+		but.Draw()
 		but.clickHndr()
 	} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
-		// release the button if user clicked inside it and then draged the mouse outisde without releasing the mouse button
-		log.Debug("Button ms handler: clicked inside. released outside.")
+		log.Debug("TitleBarButton ms handler: clicked inside. released outside.")
 		but.wasClicked = false
-		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, 0)	
-		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, 0)	
+		but.Draw()
 	} else {
-		log.Debug("Button ms handler: do nothing...")
+		log.Debug("TitleBarButton ms handler: do nothing...")
 	}
 }

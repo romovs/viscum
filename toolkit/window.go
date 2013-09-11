@@ -21,7 +21,7 @@ type Window struct {
 	wasClicked		bool
 	titleBarHeight	int
 	cmpWinActHndr	cmpWinActivateHandler
-	closeButton		*Button
+	closeButton		*TitleBarButton
 }
 
 type cmpWinActivateHandler func(uint64)
@@ -55,7 +55,7 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 
 	ms.RegisterMouse(win.Element.Id, win.Mouse, win.activate, &win.Element.ScreenX, &win.Element.ScreenY, w, h)
 	
-	win.closeButton = win.Button(ms, func() {
+	win.closeButton = win.TitleBarButton(ms, func() {
 		log.Debugf("Window %v exiting...", win.Id)
 		// deregister the window
 		win.Element.CompRemoveHdnr(win.Id)
