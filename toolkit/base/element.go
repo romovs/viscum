@@ -13,6 +13,7 @@ import (
 	"image/color"
 	"image"
 	"container/list"
+	"code.google.com/p/freetype-go/freetype/truetype"
 )
 
 const (
@@ -50,6 +51,7 @@ type Element struct {
 	DeactivateHndr	func()
 	Children		*list.List
 	CompRemoveHdnr	func(uint64)
+	Font			*truetype.Font
 }
 
 

@@ -5,11 +5,9 @@ package compositor
 
 import (
 	"fbdev"
-	"image"
-	"image/draw"
-	log "github.com/cihub/seelog"
 	"container/list"
 	"toolkit/base"
+	"gfx"
 )
 
 type Compositor struct {
@@ -48,12 +46,12 @@ func (c *Compositor) Compose() {
 		// render desktop, windows, and child elements
 		for v := c.WindowList.Back(); v != nil; v = v.Prev() {
 			e := v.Value.(*base.Element)
-			RenderElement(c.fb, e, e.X, e.Y, e.Width, e.Height)
+			gfx.DrawSrc(c.fb, e, e.X, e.Y, e.Width, e.Height)
 		}
 		
 		// render mouse pointer
 		if c.mousePointer != nil {
-			RenderElement(c.fb, c.mousePointer, c.mousePointer.X, c.mousePointer.Y, c.mousePointer.Width, c.mousePointer.Height)
+			gfx.DrawSrc(c.fb, c.mousePointer, c.mousePointer.X, c.mousePointer.Y, c.mousePointer.Width, c.mousePointer.Height)
 		}
 
 		flush(c)
@@ -102,16 +100,4 @@ func (c *Compositor) ActivateWindow(id uint64) {
 			break
 		}
 	}
-}
-
-func RenderElement(fb *fbdev.Framebuffer, o *base.Element, x, y, width, height int) {
-	
-	rect := image.Rectangle{
-			Min: image.Point{X: x, Y: y},
-			Max: image.Point{X: x+width, Y: y+height},
-	}
-	
-	log.Debugf("Rendering: %v  at: %v", o.Bounds(), rect)
-
-	draw.Draw(fb, rect, o, o.Bounds().Min, draw.Src)
 }

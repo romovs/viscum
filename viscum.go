@@ -13,6 +13,7 @@ import (
 	_ "image/png"
 	log "github.com/cihub/seelog"
 	"compositor"
+	"os"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	fb, err := 	fbdev.Init("/dev/fb0", "/dev/tty0")
 	if err != nil {
 		log.Critical(err)
-		return
+		os.Exit(1)
 	}
 	defer fb.Close()
 
@@ -37,7 +38,7 @@ func main() {
 	ms, err := mouse.Init("/dev/input/mice", int(fb.Vinfo.Xres), int(fb.Vinfo.Yres), cmp.MouseWait, cmp.CompositorRelease, cmp.WindowList)
 	if err != nil {
 		log.Critical(err)
-		return
+		os.Exit(1)
 	}
 	defer ms.Close()
 	go ms.Process()
@@ -49,7 +50,7 @@ func main() {
 	desk, err := toolkit.CreateDesktop(fb, ms, cmp.InvMsgPipe, 50, 107, 89, 0)
 	if err != nil {
 		log.Critical(err)
-		return
+		os.Exit(1)
 	}
 	cmp.RegisterElement(&desk.Element)
 	
@@ -58,34 +59,19 @@ func main() {
 	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 200, 200)
 	if err != nil {
 		log.Critical(err)
-		return
+		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
-	win.Button(ms, func () { log.Debug("Button clicked!") }, 70, 80, 60, 20)
+	win.Button(ms, func () { log.Debug("Button clicked!") }, 90, 80, 60, 20)
+	win.Label(ms, "A button:", 30, 82, 60, 20)
 	
 	// create test app #2
 	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100)
 	if err != nil {
 		log.Critical(err)
-		return
+		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
-	
-	
-	/*f, err := os.Open("test.png")
-    if err != nil {
-		log.Critical(err)
-		return
-    }
-    defer f.Close()
-    		
-    img, _, err := image.Decode(bufio.NewReader(f))
-    if err != nil  {
-		log.Critical(err)
-		return
-	}*/
-	
-	//fb.Draw(350, 250, img)
 
 	fmt.Scanln()
 }
