@@ -38,16 +38,16 @@ func (ms *Mouse) CreatePointer(fb *fbdev.Framebuffer, imp chan int64) (*MousePoi
 	
 	ms.RegisterMousePointer(mp.mouse)
 
-	gfx.SetPixel(mp.Element.Buffer, 0, 0, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 0, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 2, 0, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 3, 0, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 1, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 1, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 2, 1, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 2, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 2, mp.Element.Width, 0, 255, 0, 0)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 3, mp.Element.Width, 0, 255, 0, 0)
+	gfx.SetPixel(mp.Element.Buffer, 0, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 1, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 2, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 3, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 0, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 1, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 2, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 0, 2, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 1, 2, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+   	gfx.SetPixel(mp.Element.Buffer, 0, 3, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
 	return mp
 }
 

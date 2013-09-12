@@ -11,6 +11,7 @@ import (
 	"image"
 	"image/draw"
 	"strings"
+	"image/color"
 )
 
 
@@ -41,18 +42,19 @@ func Default() (*truetype.Font) {
 	return defaultFont
 }
 
-func Render(txt string, width, height int, font *truetype.Font) (*image.RGBA, error) {
+func Render(dst draw.Image, txt string, x, y, width, height int, font *truetype.Font) (error) {
 
-	rgba := image.NewRGBA(image.Rect(0, 0, width, height))
-	draw.Draw(rgba, rgba.Bounds(), image.Transparent, image.ZP, draw.Src)
+	fg := &image.Uniform{color.RGBA{0, 0, 0, 255}}
+
+	mask := image.NewAlpha(image.Rect(0, 0, width, height))
 
 	c := freetype.NewContext()
 	c.SetDPI(dpi)
 	c.SetFont(font)
 	c.SetFontSize(size)
-	c.SetClip(rgba.Bounds())
-	c.SetDst(rgba)
-	c.SetSrc(image.Black)
+	c.SetClip(mask.Bounds())
+	c.SetDst(mask)
+	c.SetSrc(image.Opaque)
 		
 	pt := freetype.Pt(0, int(c.PointToFix32(size) >> 8))
 		
@@ -62,10 +64,17 @@ func Render(txt string, width, height int, font *truetype.Font) (*image.RGBA, er
 		_, err := c.DrawString(s, pt)
 		if err != nil {
 			log.Critical(err)
-			return nil, err
+			return err
 		}
 		pt.Y += c.PointToFix32(size * spacing)
 	}
 
-	return rgba, nil
+	rect := image.Rectangle{
+			Min: image.Point{X: x, Y: y},
+			Max: image.Point{X: x+width, Y: y+height},
+	}
+
+    draw.DrawMask(dst, rect, fg, image.ZP, mask, image.ZP, draw.Over)
+
+	return nil
 }

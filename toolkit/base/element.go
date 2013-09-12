@@ -76,30 +76,25 @@ func (e *Element) Bounds() image.Rectangle {
 func (e *Element) At(x, y int) color.Color {
 	offset := gfx.GetPixelOffset(x, y, e.Width)
 	
-	c := color.RGBA{
+	return color.RGBA{
 		R: e.Buffer[offset + I_R],
 		G: e.Buffer[offset + I_G],
 		B: e.Buffer[offset + I_B],
+		A: e.Buffer[offset + I_A],
 	}
-
-	/*if fb.Vinfo.Transp.Length != 0 {
-		c.A = fb.Data[offset + I_A]
-	}*/
-	return c
 }
 
 
 func (e *Element) Set(x, y int, c color.Color) {
 	offset := gfx.GetPixelOffset(x, y, e.Width)
-	r, g, b, _ := c.RGBA()
+	r, g, b, a := c.RGBA()
 	
-	e.Buffer[offset + I_R] = uint8(r)
-	e.Buffer[offset + I_G] = uint8(g)
-	e.Buffer[offset + I_B] = uint8(b)
-	
-	/*if fb.Vinfo.Transp.Length != 0 {
-		fb.Data[offset + I_A] = uint8(a)
-	}*/
+	// since image.Draw works with RGBA64 internally we need to convert the color value to RGBA before writing 
+	// to the framebuffer - hence the div 256
+	e.Buffer[offset + I_R] = uint8(r/256)
+	e.Buffer[offset + I_G] = uint8(g/256)
+	e.Buffer[offset + I_B] = uint8(b/256)
+	e.Buffer[offset + I_A] = uint8(a/256)
 }
 
 
@@ -114,13 +109,3 @@ func (e *Element) UpdateScreenY(deltaY int) {
 func (e *Element) GetId() (uint64) {
 	return e.Id
 }
-
-/*func (o *Element) Dr(fb *fbdev.Framebuffer, x, y, width, height int) {
-	
-	rect := image.Rectangle{
-			Min: image.Point{X: x, Y: y},
-			Max: image.Point{X: x+width, Y: y+height},
-	}
-	
-	draw.Draw(fb, rect, o, o.Bounds().Min, draw.Src)
-}*/

@@ -76,11 +76,11 @@ func (win *Window) Draw() {
 	log.Debug("Drawing Window")
 
 	// window
-	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 255, 0, 0, 0)	
-	gfx.Rect(win.Element.Buffer, 0, 0, win.Element.Width-1, win.Element.Height-1, win.Element.Width, 0, 0, 0, 0)	
+	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 255, 0, 0, gfx.A_OPAQUE)	
+	gfx.Rect(win.Element.Buffer, 0, 0, win.Element.Width-1, win.Element.Height-1, win.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
 
 	// title bar
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, 0)	
+	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
 
 	// render children
 	for v := win.Children.Front(); v != nil; v = v.Next() {
@@ -90,7 +90,7 @@ func (win *Window) Draw() {
 
 
 func (win *Window) activate() {
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width,  55, 109, 181, 0)	
+	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width,  55, 109, 181, gfx.A_OPAQUE)	
 	win.cmpWinActHndr(win.Id)
 	// redraw titlebar buttons
 	win.closeButton.Draw()
@@ -98,7 +98,7 @@ func (win *Window) activate() {
 
 
 func (win *Window) Deactivate() {
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, 0)	
+	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
 	// redraw titlebar buttons
 	win.closeButton.Draw()
 }

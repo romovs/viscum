@@ -7,7 +7,6 @@ import (
 	"fbdev"
 	"mouse"
 	log "github.com/cihub/seelog"
-	"gfx"
 	"math/rand"
 	"time"
 	"toolkit/base"
@@ -54,12 +53,7 @@ func (win *Window) Label(ms *mouse.Mouse, txt string, x, y, w, h int) (*Label) {
 
 
 func (lab *Label) Draw() {
-	log.Debug("    Drawing Label")
-	
-	rgba, err := fonts.Render(lab.txt, lab.Element.Width, lab.Element.Height, lab.Element.Font)
-    if err == nil {
-		gfx.DrawOver(&lab.parent.Element, rgba, lab.Element.X, lab.Element.Y, lab.Element.Width, lab.Element.Height)
-	}
+	fonts.Render(&lab.parent.Element, lab.txt, lab.Element.X, lab.Element.Y, lab.Element.Width, lab.Element.Height, lab.Element.Font)
 }
 
 

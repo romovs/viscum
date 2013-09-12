@@ -14,6 +14,7 @@ import (
 	log "github.com/cihub/seelog"
 	"compositor"
 	"os"
+	"gfx"
 )
 
 func main() {
@@ -47,7 +48,7 @@ func main() {
 	cmp.RegisterMousePointer(&mp.Element)
 
 	// create desktop
-	desk, err := toolkit.CreateDesktop(fb, ms, cmp.InvMsgPipe, 50, 107, 89, 0)
+	desk, err := toolkit.CreateDesktop(fb, ms, cmp.InvMsgPipe, 50, 107, 89, gfx.A_OPAQUE)
 	if err != nil {
 		log.Critical(err)
 		os.Exit(1)

@@ -132,28 +132,23 @@ func (fb *Framebuffer) Bounds() image.Rectangle {
 func (fb *Framebuffer) At(x, y int) color.Color {
 	offset := gfx.GetPixelOffset(x, y, int(fb.Vinfo.Xres))
 	
-	c := color.RGBA{
+	return color.RGBA{
 		R: fb.MemOffscreen[offset + I_R],
 		G: fb.MemOffscreen[offset + I_G],
 		B: fb.MemOffscreen[offset + I_B],
+		A: fb.MemOffscreen[offset + I_A],
 	}
-	
-	/*if fb.Vinfo.Transp.Length != 0 {
-		c.A = fb.Mem[offset + I_A]
-	}*/
-	return c
 }
 
 
 func (fb *Framebuffer) Set(x, y int, c color.Color) {
 	offset := gfx.GetPixelOffset(x, y, int(fb.Vinfo.Xres))
-	r, g, b, _ := c.RGBA()
+	r, g, b, a := c.RGBA()
 	
-	fb.MemOffscreen[offset + I_R] = uint8(r)
-	fb.MemOffscreen[offset + I_G] = uint8(g)
-	fb.MemOffscreen[offset + I_B] = uint8(b)
-	
-	/*if fb.Vinfo.Transp.Length != 0 {
-		fb.Mem[offset + I_A] = uint8(a)
-	}*/
+	// since image.Draw works with RGBA64 internally we need to convert the color value to RGBA before writing 
+	// to the framebuffer - hence the div 256
+	fb.MemOffscreen[offset + I_R] = uint8(r/256)
+	fb.MemOffscreen[offset + I_G] = uint8(g/256)
+	fb.MemOffscreen[offset + I_B] = uint8(b/256)
+	fb.MemOffscreen[offset + I_A] = uint8(a/256)
 }

@@ -12,6 +12,17 @@ import (
 	"image/draw"
 )
 
+const (
+	I_A = 3	
+	I_R = 2
+	I_G = 1
+	I_B = 0
+)
+
+const (
+	A_OPAQUE = 255
+	A_TRANSP = 0
+)
 
 func GetPixelOffset(x, y, width int) (int) {
 
@@ -22,17 +33,17 @@ func GetPixelOffset(x, y, width int) (int) {
 func GetPixel(data []byte, x, y, width int) (red, green, blue, alpha byte) {		
 			
 	offset := GetPixelOffset(x, y, width)
-	return data[offset+2], data[offset+1], data[offset], data[offset+3] 
+	return data[offset+I_R], data[offset+I_G], data[offset+I_B], data[offset+I_A] 
 }
 
 
 func SetPixel(data []byte, x, y, width int, red, green, blue, alpha byte) {	
 				
 	offset := GetPixelOffset(x, y, width)
-	data[offset] = blue
-	data[offset+1] = green
-	data[offset+2] = red
-	data[offset+3] = alpha
+	data[offset + I_B] = blue
+	data[offset + I_G] = green
+	data[offset + I_R] = red
+	data[offset + I_A] = alpha
 }
 
 
@@ -96,13 +107,4 @@ func DrawSrc(dst draw.Image, src draw.Image, x, y, width, height int) {
 	}
 
 	draw.Draw(dst, rect, src, src.Bounds().Min, draw.Src)
-}
-
-func DrawOver(dst draw.Image, src draw.Image, x, y, width, height int) {
-	rect := image.Rectangle{
-			Min: image.Point{X: x, Y: y},
-			Max: image.Point{X: x+width, Y: y+height},
-	}
-
-	draw.Draw(dst, rect, src, src.Bounds().Min, draw.Over)
 }
