@@ -63,7 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
-	win.Button(ms, func () { log.Debug("Button clicked!") }, 90, 80, 60, 20)
+	win.Button(ms, "Click Me", func () { log.Debug("Button clicked!") }, 90, 80, 60, 20)
 	win.Label(ms, "A button:", 30, 82, 60, 20)
 	
 	// create test app #2
