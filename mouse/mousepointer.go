@@ -8,46 +8,53 @@ import (
 	"gfx"
 	"time"
 	"toolkit/base"
+	"os"
+	"image"
+	"bufio"
+	log "github.com/cihub/seelog"
 )
-
 
 type MousePointer struct {
 	base.Element
 	fb			*fbdev.Framebuffer
 }
 
-const (
-	WIDTH = 8
-)
-
 
 func (ms *Mouse) CreatePointer(fb *fbdev.Framebuffer, imp chan int64) (*MousePointer) {
 
+	f, err := os.Open("data/cursor/arrow.png")
+    if err != nil {
+		log.Critical(err)
+		return nil
+    }
+    defer f.Close()
+    		
+    img, _, err := image.Decode(bufio.NewReader(f))
+    if err != nil  {
+		log.Critical(err)
+		return nil
+	}
+	
 	mp := &MousePointer{
 		fb: fb,
 	}
+	
+	w := img.Bounds().Max.X
+	h := img.Bounds().Max.Y
 
 	mp.Element = base.Element{
 		X:				int(fb.Vinfo.Xres/2),
 		Y: 				int(fb.Vinfo.Yres/2),
-		Width: 			WIDTH,
-		Height:			WIDTH,
-		Buffer: 		make([]byte, WIDTH*WIDTH*4),
+		Width: 			w,
+		Height:			h,
+		Buffer: 		make([]byte, w*h*4),
 		InvMsgPipe:		imp,
 	}
 	
 	ms.RegisterMousePointer(mp.mouse)
 
-	gfx.SetPixel(mp.Element.Buffer, 0, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 2, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 3, 0, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 2, 1, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 2, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 1, 2, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
-   	gfx.SetPixel(mp.Element.Buffer, 0, 3, mp.Element.Width, 0, 255, 0, gfx.A_OPAQUE)
+	gfx.DrawSrc(&mp.Element, img, 0, 0, w, h)
+
 	return mp
 }
 

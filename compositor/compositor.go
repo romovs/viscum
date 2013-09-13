@@ -51,7 +51,7 @@ func (c *Compositor) Compose() {
 		
 		// render mouse pointer
 		if c.mousePointer != nil {
-			gfx.DrawSrc(c.fb, c.mousePointer, c.mousePointer.X, c.mousePointer.Y, c.mousePointer.Width, c.mousePointer.Height)
+			gfx.DrawOver(c.fb, c.mousePointer, c.mousePointer.X, c.mousePointer.Y, c.mousePointer.Width, c.mousePointer.Height)
 		}
 
 		flush(c)

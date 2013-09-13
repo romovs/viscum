@@ -100,11 +100,21 @@ func Clear(data []byte, width, height int, red, green, blue, alpha byte) {
 }
 
 
-func DrawSrc(dst draw.Image, src draw.Image, x, y, width, height int) {
+func DrawSrc(dst draw.Image, src image.Image, x, y, width, height int) {
 	rect := image.Rectangle{
 			Min: image.Point{X: x, Y: y},
 			Max: image.Point{X: x+width, Y: y+height},
 	}
 
 	draw.Draw(dst, rect, src, src.Bounds().Min, draw.Src)
+}
+
+
+func DrawOver(dst draw.Image, src image.Image, x, y, width, height int) {
+	rect := image.Rectangle{
+			Min: image.Point{X: x, Y: y},
+			Max: image.Point{X: x+width, Y: y+height},
+	}
+
+	draw.Draw(dst, rect, src, src.Bounds().Min, draw.Over)
 }
