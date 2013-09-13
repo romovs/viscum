@@ -31,7 +31,7 @@ func main() {
 
 	// initialize compositor
 	cmp := compositor.CreateCompositor(fb)
-	go cmp.Compose()
+
 	
 	// TODO: initialize touchscreen handler
 
@@ -46,6 +46,8 @@ func main() {
 	
 	mp := ms.CreatePointer(fb, cmp.InvMsgPipe)
 	cmp.RegisterMousePointer(&mp.Element)
+
+	go cmp.Compose()
 
 	// create desktop
 	desk, err := toolkit.CreateDesktop(fb, ms, cmp.InvMsgPipe, 50, 107, 89, gfx.A_OPAQUE)
