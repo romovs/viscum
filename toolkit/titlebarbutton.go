@@ -64,23 +64,17 @@ func (but *TitleBarButton) Draw() {
 
 
 // mouse handler
-func (but *TitleBarButton) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (but *TitleBarButton) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
-	if (flags & mouse.F_LEFT_CLICK) != 0 {
-		log.Debug("TitleBarButton ms handler: clicked inside.")
+	if (flags & mouse.F_L_CLICK) != 0 {
+		log.Debug("TitleBarButton ms handler: click")
 		but.wasClicked = true
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width,  49, 80, 0, gfx.A_OPAQUE)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
- 	} else if but.wasClicked && (flags & mouse.F_LEFT_CLICK) == 0 && (flags & mouse.F_LEFT_HOLD) == 0 {
-		log.Debug("TitleBarButton ms handler: clicked & released inside.")
+ 	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
+		log.Debug("TitleBarButton ms handler: release")
 		but.wasClicked = false
 		but.Draw()
 		but.clickHndr()
-	} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
-		log.Debug("TitleBarButton ms handler: clicked inside. released outside.")
-		but.wasClicked = false
-		but.Draw()
-	} else {
-		log.Debug("TitleBarButton ms handler: do nothing...")
 	}
 }

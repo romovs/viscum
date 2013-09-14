@@ -59,7 +59,7 @@ func (ms *Mouse) CreatePointer(fb *fbdev.Framebuffer, imp chan int64) (*MousePoi
 }
 
 
-func (mp *MousePointer) mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (mp *MousePointer) mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 	mp.Element.X += deltaX
 	mp.Element.Y += deltaY
 	mp.Element.InvMsgPipe <- time.Now().UnixNano()

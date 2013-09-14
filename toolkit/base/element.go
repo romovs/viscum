@@ -32,7 +32,7 @@ type IElement interface {
 	At(x, y int) color.Color
 	Set(x, y int, c color.Color)
 	
-	Mouse(int, int, int, int, byte) 
+	Mouse(int, int, int, int, uint16) 
 	Draw()
 	
 	GetId() uint64

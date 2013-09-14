@@ -70,17 +70,17 @@ func (but *Button) Draw() {
 
 
 // mouse handler
-func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
-	if (flags & mouse.F_LEFT_CLICK) != 0 {
-		log.Debug("Button ms handler: clicked inside.")
+	if (flags & mouse.F_L_CLICK) != 0 {
+		log.Debug("Button ms handler: click")
 		but.wasClicked = true
 		// visualise the click
 		gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width,  49, 80, 0, gfx.A_OPAQUE)	
 		gfx.Rect(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width-1, but.Element.Y+but.Element.Height-1, but.parent.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
 		fonts.Render(&but.parent.Element, but.txt, but.Element.X, but.Element.Y, but.Element.Width, but.Element.Height, but.Element.Font)
- 	} else if but.wasClicked && (flags & mouse.F_LEFT_CLICK) == 0 && (flags & mouse.F_LEFT_HOLD) == 0 {
-		log.Debug("Button ms handler: clicked & released inside.")
+ 	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
+		log.Debug("Button ms handler: release")
 		but.wasClicked = false
 		but.Draw()
 		but.clickHndr()
@@ -89,7 +89,5 @@ func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 		log.Debug("Button ms handler: clicked inside. released outside.")
 		but.wasClicked = false
 		but.Draw()
-	} else {
-		log.Debug("Button ms handler: do nothing...")
-	}
+	} 
 }

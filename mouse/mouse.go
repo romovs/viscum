@@ -17,6 +17,7 @@ import (
 	"utils"
 	"container/list"
 	"toolkit/base"
+	"time"
 )
 
 type Mouse struct {
@@ -29,11 +30,12 @@ type Mouse struct {
 	cb				*list.List
 	windowList		*list.List		// element list used by the composer
 	mouseHndr		mouseHandler
-	leftPressed		bool
-	rightPressed	bool
-	flags			byte
+	flags			uint16
 	mouseRelease	chan bool
 	compositorWait	chan bool
+	opL1			bool			// one before preivous mouse event
+	opL2			bool 			// previous mouse event	
+	lClickTime		int64			// time of the previous left click
 }
 
 type MouseMovementPacket struct {
@@ -51,17 +53,29 @@ type Callback struct {
 	height			int
 	isMouseIn		bool		// specifies whether mouse was inside the element on previous MMP
 	activateHndr	activateHandler
-	flags			byte
+	flags			uint16
 }
 
 const (
-	F_LEFT_HOLD				= 2
-	F_LEFT_HOLD_RELEASE		= 4
-	F_RIGTH_HOLD			= 2
-	F_RIGTH_HOLD_RELEASE	= 4
-	F_LEFT_CLICK			= 8
-	F_EL_ENTER				= 16
-	F_EL_LEAVE				= 32
+	DBL_CLICK_PERIOD	= 220*1000*1000	// maximum time in nanoseconds between two consecutive clicks for them
+										// to be considered a double click 
+)
+
+const (
+	F_L_CLICK		= 1
+	F_L_DBL_CLICK	= 2
+	F_L_HOLD		= 4
+	F_L_PRESS		= 8
+	F_L_RELEASE		= 16
+	
+	F_R_CLICK		= 32
+	F_R_DBL_CLICK	= 64
+	F_R_HOLD		= 128
+	F_R_PRESS		= 256
+	F_R_RELEASE		= 512
+	
+	F_EL_ENTER		= 1024
+	F_EL_LEAVE		= 2048
 )
 
 
@@ -76,8 +90,6 @@ func Init(dev string, screenWidth int, screenHeight int, msRelease chan bool, co
 		dev:			fd,
 		cb: 			list.New(),
 		windowList:		wl,
-		leftPressed:	false,
-		rightPressed:	false,
 		flags:			0,
 		mouseRelease:	msRelease,
 		compositorWait: compWait,
@@ -85,6 +97,8 @@ func Init(dev string, screenWidth int, screenHeight int, msRelease chan bool, co
 		yPos:			screenHeight/2,
 		width:			screenWidth,
 		height:			screenHeight,
+		opL1:			false,
+		opL2:			false,
 	}
 
 	return ms, nil
@@ -135,25 +149,30 @@ func (ms *Mouse) Process() (error) {
 		log.Debugf("Mouse Mov. Deltas: %v : %v    flags: %v", deltaX, deltaY, mmp.Flags)
 		
 		// TODO: handle overflow
-
-		if mmp.BtnLeft() && !ms.leftPressed {
-			ms.leftPressed = true
-			ms.flags |= F_LEFT_CLICK
-			log.Debug("Mouse: L btn press")
-		} else if mmp.BtnLeft() && ms.leftPressed && (ms.flags & F_LEFT_HOLD) == 0 {
-			ms.flags |= F_LEFT_HOLD
-			ms.flags &^= F_LEFT_CLICK
-			log.Debug("Mouse: L btn hold")
-		} else if !mmp.BtnLeft() && ((ms.flags & F_LEFT_HOLD) != 0){	
-			ms.flags &^= F_LEFT_HOLD
-			ms.leftPressed = false
-			log.Debug("Mouse: L btn release after hold")
-		} else if !mmp.BtnLeft() && ((ms.flags & F_LEFT_CLICK) != 0){	
-			ms.flags &^= F_LEFT_CLICK
-			ms.leftPressed = false
-			log.Debug("Mouse: L btn release")
-		} 
 		
+		
+		leftPressed := mmp.BtnLeft()
+
+		if ms.opL2 && leftPressed {
+			ms.flags = F_L_HOLD				// hold
+		} else if !ms.opL1 && !ms.opL2 && leftPressed {
+			ms.flags = F_L_CLICK			// click
+			ms.lClickTime = time.Now().UnixNano()
+		} else if ms.opL1 && !ms.opL2 && leftPressed {
+			if (time.Now().UnixNano() - ms.lClickTime) < DBL_CLICK_PERIOD {
+				ms.flags = F_L_DBL_CLICK	// double click (triggered on second press)
+			} else {
+				ms.flags = F_L_CLICK		// consecutive clicks separated in time 
+				ms.lClickTime = time.Now().UnixNano()
+			}
+		} else if ms.opL2 && !leftPressed {
+			ms.flags = F_L_RELEASE			// release
+		} else {
+			ms.flags = 0
+		}
+		
+		ms.opL1 = ms.opL2
+		ms.opL2 = leftPressed
 		
 		set := make(map[interface{}]*Callback, ms.cb.Len())
 		
@@ -166,7 +185,7 @@ func (ms *Mouse) Process() (error) {
 			   (*(cb.x) < oldXpos && *(cb.x) + cb.width > oldXpos &&	// accout for any element movement
 			   *(cb.y) < oldYpos && *(cb.y) + cb.height > oldYpos) {
 
-				log.Debugf("Mouse: Within element: %v : %v  -  %v : %v", *(cb.x), *(cb.y), cb.width, cb.height)
+				log.Debugf("Mouse: in element: %v : %v  -  %v : %v", *(cb.x), *(cb.y), cb.width, cb.height)
 
 				cb.flags = ms.flags
 
@@ -201,8 +220,8 @@ func (ms *Mouse) Process() (error) {
 	     	cb := set[v.Value.(*base.Element).Id]
 	    
 			if cb != nil {
-				// execute activation handler only if it's a click and window isn't active already
-				if (cb.flags & F_LEFT_CLICK) != 0 && curActiveWinId != v.Value.(*base.Element).Id {
+				// execute activation handler only if clicked inside and window isn't active already
+				if (cb.flags & F_L_HOLD) == 0 && leftPressed && curActiveWinId != v.Value.(*base.Element).Id {
 					cb.activateHndr()
 				}
 				// execute the mouse handler for this window. after this we don't need to check further
@@ -223,7 +242,7 @@ func (ms *Mouse) Process() (error) {
 }
 
 
-type mouseHandler func(int, int, int, int, byte)
+type mouseHandler func(int, int, int, int, uint16)
 type activateHandler func()
 
 

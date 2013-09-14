@@ -58,7 +58,7 @@ func (lab *Label) Draw() {
 
 
 // mouse handler
-func (lab *Label) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (lab *Label) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
 	log.Debug("Label ms handler: do nothing...")
 

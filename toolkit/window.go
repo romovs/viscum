@@ -105,16 +105,16 @@ func (win *Window) Deactivate() {
 
 
 // mouse handler
-func (win *Window) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
+func (win *Window) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
-	// drag only if clicked inside titlebar. it's enoguh to check Y position. because X will be anyway inside the window bounds
+	// drag only if clicked inside titlebar. checking Y position is enough, because X will be inside the window bounds anyway
 	if win.Element.Y + deltaY <= y && y <= win.Element.Y + deltaY + win.titleBarHeight{
 	
-		if (flags & mouse.F_LEFT_CLICK) != 0 {
-			log.Debug("Window ms handler: title F_LEFT_CLICK")
+		if (flags & mouse.F_L_CLICK) != 0 {
+			log.Debug("Window ms handler: click")
 			win.wasClicked = true
-		} else if win.wasClicked && (flags & mouse.F_LEFT_HOLD) != 0 {
-			log.Debug("Window ms handler: title F_LEFT_HOLD")
+		} else if win.wasClicked && (flags & mouse.F_L_HOLD) != 0 {
+			log.Debug("Window ms handler: drag")
 			win.Element.X += deltaX
 			win.Element.Y += deltaY
 			win.Element.ScreenX += deltaX
@@ -125,6 +125,8 @@ func (win *Window) Mouse(x int, y int, deltaX int, deltaY int, flags byte) {
 				v.Value.(base.IElement).UpdateScreenX(deltaX)
 				v.Value.(base.IElement).UpdateScreenY(deltaY)
 			}	
+		} else if (flags & mouse.F_L_DBL_CLICK) != 0 {
+			log.Debug("Window ms handler: double click")
 		} else {
 			log.Debug("Window ms handler: title do nothing...")
 			win.wasClicked = false
