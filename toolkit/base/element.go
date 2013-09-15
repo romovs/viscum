@@ -14,6 +14,7 @@ import (
 	"image"
 	"container/list"
 	"code.google.com/p/freetype-go/freetype/truetype"
+	"sync/atomic"
 )
 
 const (
@@ -52,6 +53,13 @@ type Element struct {
 	Children		*list.List
 	CompRemoveHdnr	func(uint64)
 	Font			*truetype.Font
+}
+
+
+var globalId uint64 = 0
+
+func GenerateId() (uint64) {
+	return atomic.AddUint64(&globalId, 1)
 }
 
 

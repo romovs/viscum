@@ -7,8 +7,6 @@ import (
 	"fbdev"
 	"mouse"
 	log "github.com/cihub/seelog"
-	"math/rand"
-	"time"
 	"toolkit/base"
 	"fonts"
 )
@@ -32,10 +30,8 @@ func (win *Window) Label(ms *mouse.Mouse, txt string, x, y, w, h int) (*Label) {
 	
 	win.Children.PushFront(lab)
 
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))			// FIXME
-
 	lab.Element = base.Element{
-		Id:			uint64(r.Int63()),
+		Id:			base.GenerateId(),
 		X: 			x,
 		Y: 			y,
 		ScreenX:	win.Element.X+x,

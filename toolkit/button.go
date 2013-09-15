@@ -8,8 +8,6 @@ import (
 	"mouse"
 	log "github.com/cihub/seelog"
 	"gfx"
-	"math/rand"
-	"time"
 	"toolkit/base"
 	"fonts"
 )
@@ -36,10 +34,8 @@ func (win *Window) Button(ms *mouse.Mouse, txt string, fnClick clickHandler, x, 
 	
 	win.Children.PushFront(but)
 
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))			// FIXME
-
 	but.Element = base.Element{
-		Id:			uint64(r.Int63()),
+		Id:			base.GenerateId(),
 		X: 			x,
 		Y: 			y,
 		ScreenX:	win.Element.X+x,

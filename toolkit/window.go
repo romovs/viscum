@@ -8,8 +8,6 @@ import (
 	"mouse"
 	log "github.com/cihub/seelog"
 	"gfx"
-	"math/rand"
-	"time"
 	"toolkit/base"
 	"container/list"
 )
@@ -36,11 +34,9 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 		wasClicked: 		false,
 		cmpWinActHndr:		fnCmpWinActivate,
 	}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))			// FIXME
-
+	
 	win.Element = base.Element{
-		Id:				uint64(r.Int63()),
+		Id:				base.GenerateId(),
 		X: 				x,				// relative position within the parent element
 		Y: 				y,
 		ScreenX:		x,				// position within the screen coordinates
@@ -76,7 +72,7 @@ func (win *Window) Draw() {
 	log.Debug("Drawing Window")
 
 	// window
-	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 255, 0, 0, gfx.A_OPAQUE)	
+	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 241, 240, 238, gfx.A_OPAQUE)	
 	gfx.Rect(win.Element.Buffer, 0, 0, win.Element.Width-1, win.Element.Height-1, win.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
 
 	// title bar
