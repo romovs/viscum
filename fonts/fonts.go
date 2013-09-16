@@ -42,6 +42,33 @@ func Default() (*truetype.Font) {
 	return defaultFont
 }
 
+
+func ExpectedSize(font *truetype.Font, s string) (int32, int32, error) {
+
+	c := freetype.NewContext()
+	c.SetDPI(dpi)
+	c.SetFont(font)
+	c.SetFontSize(size)
+
+	scale := size / float64(font.FUnitsPerEm())
+        
+	prev := font.Index(rune(s[0]))
+	width := int32(font.HMetric(font.FUnitsPerEm(), prev).AdvanceWidth)
+	for _, char := range s[1:] {
+		index := font.Index(char)
+		width += int32(font.Kerning(font.FUnitsPerEm(), prev, index) + 
+					   font.HMetric(font.FUnitsPerEm(), index).AdvanceWidth)
+		prev = index
+	}
+	width = int32(float64(width) * scale)
+
+	bounds := font.Bounds(font.FUnitsPerEm())
+	height := int32(float64(bounds.YMax-bounds.YMin) * scale)
+
+	return width, height, nil
+}
+
+
 func Render(dst draw.Image, txt string, x, y, width, height int, font *truetype.Font) (error) {
 
 	fg := &image.Uniform{color.RGBA{0, 0, 0, 255}}
