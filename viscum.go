@@ -9,12 +9,13 @@ import (
 	"toolkit"
 	"mouse"
 	"utils"
-	_ "image/jpeg"
+	"image"
 	_ "image/png"
 	log "github.com/cihub/seelog"
 	"compositor"
 	"os"
 	"gfx"
+	"bufio"
 )
 
 func main() {
@@ -59,14 +60,30 @@ func main() {
 	
 	// create test app #1
 	var win *toolkit.Window;
-	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 200, 200)
+	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 250, 200)
 	if err != nil {
 		log.Critical(err)
 		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
-	win.Button(ms, "Click Me", func () { log.Debug("Button clicked!") }, 90, 80, 60, 20)
-	win.Label(ms, "A button:", 30, 82, 60, 20)
+	win.Button(toolkit.BS_TEXT, ms, nil, "Click Me", func () { log.Debug("Button clicked!") }, 10, 160, 60, 30)
+	
+	f, err := os.Open("data/v.png")
+    if err != nil {
+		log.Critical(err)
+		os.Exit(1)
+    }
+    defer f.Close()
+    		
+    img, _, err := image.Decode(bufio.NewReader(f))
+    if err != nil  {
+		log.Critical(err)
+		os.Exit(1)
+	}
+	win.Button(toolkit.BS_ICON_TEXT, ms, img, "No! Me!!!", func () { log.Debug("Button clicked!") }, 80, 160, 100, 30)
+	win.Button(toolkit.BS_ICON, ms, img, "", func () { log.Debug("Button clicked!") }, 190, 160, 30, 30)
+	
+	win.Label(ms, "Testing...", 100, 50, 60, 20)
 	
 	// create test app #2
 	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100)

@@ -42,13 +42,13 @@ func (win *Window) Label(ms *mouse.Mouse, txt string, x, y, w, h int) (*Label) {
 		Font:		fonts.Default(),
 	}
 	
-	lab.Draw() 
+	lab.Draw(nil) 
 	
 	return lab
 }
 
 
-func (lab *Label) Draw() {
+func (lab *Label) Draw(data interface{}) {
 	fonts.Render(&lab.parent.Element, lab.txt, lab.Element.X, lab.Element.Y, lab.Element.Width, lab.Element.Height, lab.Element.Font)
 }
 
