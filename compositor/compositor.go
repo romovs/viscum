@@ -8,7 +8,6 @@ import (
 	"container/list"
 	"toolkit/base"
 	"gfx"
-	"time"
 )
 
 type Compositor struct {
@@ -30,7 +29,9 @@ func CreateCompositor(fb *fbdev.Framebuffer) (*Compositor) {
 		MouseWait: 			make(chan bool, 1),
 		CompositorRelease:	make(chan bool, 1),
 	} 
-
+	
+	c.CompositorRelease<- false
+	
 	return c
 }
 
@@ -68,10 +69,6 @@ func flush(c *Compositor) {
 func (c *Compositor) RegisterElement(e *base.Element) {
 	e.CompRemoveHdnr = c.RemoveElement
 	c.WindowList.PushFront(e)
-	
-	// do not wait for mouse when new element is registered
-	c.InvMsgPipe <- time.Now().UnixNano()
-	c.MouseWait<- false
 }
 
 func (c *Compositor) RemoveElement(id uint64) {
