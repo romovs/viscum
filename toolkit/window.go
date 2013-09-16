@@ -20,12 +20,18 @@ type Window struct {
 	titleBarHeight	int
 	cmpWinActHndr	cmpWinActivateHandler
 	closeButton		*TitleBarButton
+	tbHidden		bool
 }
+
+const(
+	WS_TITLEBAR_HIDDEN	= 1 << iota
+)
+
 
 type cmpWinActivateHandler func(uint64)
 
 
-func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64, 
+func CreateWindow (style byte, fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer, ms *mouse.Mouse, imp chan int64, 
 					x, y, w, h int) (*Window, error) {
 
 	win := &Window{
@@ -33,6 +39,7 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 		titleBarHeight: 	20,
 		wasClicked: 		false,
 		cmpWinActHndr:		fnCmpWinActivate,
+		tbHidden:			style & WS_TITLEBAR_HIDDEN != 0,
 	}
 	
 	win.Element = base.Element{
@@ -51,33 +58,36 @@ func CreateWindow (fnCmpWinActivate cmpWinActivateHandler, fb *fbdev.Framebuffer
 
 	ms.RegisterMouse(win.Element.Id, win.Mouse, win.activate, &win.Element.ScreenX, &win.Element.ScreenY, w, h)
 	
-	win.closeButton = win.TitleBarButton(ms, func() {
-		log.Debugf("Window %v exiting...", win.Id)
-		// deregister the window
-		win.Element.CompRemoveHdnr(win.Id)
-		// remove mouse handlers
-		ms.DeregisterMouse(win.Id)
-		for v := win.Children.Front(); v != nil; v = v.Next() {
-			ms.DeregisterMouse(v.Value.(base.IElement).GetId())
-		}	
-	}, w-15, 5, 10, 10)
-	
-	win.Draw(nil)
+	if !win.tbHidden {
+		win.closeButton = win.TitleBarButton(ms, func() {
+			log.Debugf("Window %v exiting...", win.Id)
+			// deregister the window
+			win.Element.CompRemoveHdnr(win.Id)
+			// remove mouse handlers
+			ms.DeregisterMouse(win.Id)
+			for v := win.Children.Front(); v != nil; v = v.Next() {
+				ms.DeregisterMouse(v.Value.(base.IElement).GetId())
+			}	
+		}, w-15, 5, 10, 10)
+	}
 
+	win.Draw(nil)
+	
 	return win, nil
 }
 
 
 func (win *Window) Draw(data interface{}) {
-	log.Debug("Drawing Window")
+	log.Debug("Drawing Window %v", win.Id)
 
 	// window
 	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 241, 240, 238, gfx.A_OPAQUE)	
 	gfx.Rect(win.Element.Buffer, 0, 0, win.Element.Width-1, win.Element.Height-1, win.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
 
 	// title bar
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
-
+	if !win.tbHidden {
+		gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
+	}
 	// render children
 	for v := win.Children.Front(); v != nil; v = v.Next() {
 		v.Value.(base.IElement).Draw(false)
@@ -86,17 +96,22 @@ func (win *Window) Draw(data interface{}) {
 
 
 func (win *Window) activate() {
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width,  55, 109, 181, gfx.A_OPAQUE)	
 	win.cmpWinActHndr(win.Id)
-	// redraw titlebar buttons
-	win.closeButton.Draw(nil)
+
+	if !win.tbHidden {
+		gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 55, 109, 181, gfx.A_OPAQUE)	
+		// redraw titlebar buttons
+		win.closeButton.Draw(nil)
+	}
 }
 
 
 func (win *Window) Deactivate() {
-	gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
-	// redraw titlebar buttons
-	win.closeButton.Draw(nil)
+	if !win.tbHidden {
+		gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
+		// redraw titlebar buttons
+		win.closeButton.Draw(nil)
+	}
 }
 
 
@@ -104,7 +119,7 @@ func (win *Window) Deactivate() {
 func (win *Window) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
 	// drag only if clicked inside titlebar. checking Y position is enough, because X will be inside the window bounds anyway
-	if win.Element.Y + deltaY <= y && y <= win.Element.Y + deltaY + win.titleBarHeight{
+	if !win.tbHidden && win.Element.Y + deltaY <= y && y <= win.Element.Y + deltaY + win.titleBarHeight{
 	
 		if (flags & mouse.F_L_CLICK) != 0 {
 			log.Debug("Window ms handler: click")

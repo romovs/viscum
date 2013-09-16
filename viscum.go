@@ -60,7 +60,7 @@ func main() {
 	
 	// create test app #1
 	var win *toolkit.Window;
-	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 250, 200)
+	win, err = toolkit.CreateWindow(0, cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 132, 345, 250, 200)
 	if err != nil {
 		log.Critical(err)
 		os.Exit(1)
@@ -86,12 +86,21 @@ func main() {
 	win.Label(ms, "Testing...", 100, 50, 60, 20)
 	
 	// create test app #2
-	win, err = toolkit.CreateWindow(cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100)
+	win, err = toolkit.CreateWindow(0, cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 500, 500, 100, 100)
 	if err != nil {
 		log.Critical(err)
 		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
+	
+	// create test app #3
+	win, err = toolkit.CreateWindow(toolkit.WS_TITLEBAR_HIDDEN, cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 300, 150, 150, 150)
+	if err != nil {
+		log.Critical(err)
+		os.Exit(1)
+	}
+	cmp.RegisterElement(&win.Element)
+	
 
 	fmt.Scanln()
 }
