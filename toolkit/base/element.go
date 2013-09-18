@@ -34,7 +34,7 @@ type IElement interface {
 	Set(x, y int, c color.Color)
 	
 	Mouse(int, int, int, int, uint16) 
-	Draw(interface{})
+	Draw()
 	
 	GetId() uint64
 }

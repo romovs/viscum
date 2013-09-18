@@ -71,13 +71,13 @@ func CreateWindow (style byte, fnCmpWinActivate cmpWinActivateHandler, fb *fbdev
 		}, w-15, 5, 10, 10)
 	}
 
-	win.Draw(nil)
+	win.Draw()
 	
 	return win, nil
 }
 
 
-func (win *Window) Draw(data interface{}) {
+func (win *Window) Draw() {
 	log.Debug("Drawing Window %v", win.Id)
 
 	// window
@@ -90,7 +90,7 @@ func (win *Window) Draw(data interface{}) {
 	}
 	// render children
 	for v := win.Children.Front(); v != nil; v = v.Next() {
-		v.Value.(base.IElement).Draw(false)
+		v.Value.(base.IElement).Draw()
 	}	
 }
 
@@ -101,7 +101,7 @@ func (win *Window) activate() {
 	if !win.tbHidden {
 		gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 55, 109, 181, gfx.A_OPAQUE)	
 		// redraw titlebar buttons
-		win.closeButton.Draw(nil)
+		win.closeButton.Draw()
 	}
 }
 
@@ -110,7 +110,7 @@ func (win *Window) Deactivate() {
 	if !win.tbHidden {
 		gfx.RectFilled(win.Element.Buffer, 1, 1, win.Element.Width-1, win.titleBarHeight, win.Element.Width, 29, 59, 99, gfx.A_OPAQUE)	
 		// redraw titlebar buttons
-		win.closeButton.Draw(nil)
+		win.closeButton.Draw()
 	}
 }
 

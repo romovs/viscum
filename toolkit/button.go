@@ -69,16 +69,16 @@ func (win *Window) Button(style byte, ms *mouse.Mouse, icon image.Image, txt str
 	
 	ms.RegisterMouse(but.Element.Id, but.Mouse, nil, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
 	
-	but.Draw(false)
+	but.Draw()
 	
 	return but
 }
 
 
-func (but *Button) Draw(isPushed interface{}) {
+func (but *Button) Draw() {
 	var r, g, b byte
 	
-	if isPushed.(bool) {
+	if but.pushed {
 		r, g, b = 49, 80, 0
 	} else {
 		r, g, b = 80, 130, 0
@@ -121,24 +121,27 @@ func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 	if but.style & BS_TOGGLE != 0 {
 		if (flags & mouse.F_L_CLICK) != 0 {
 			but.pushed = !but.pushed
-			but.Draw(but.pushed)
+			but.Draw()
 			but.clickHndr(but.pushed)
 		} 
 	} else {
 		if (flags & mouse.F_L_CLICK) != 0 {
 			log.Debug("Button ms handler: click")
+			but.pushed = true
 			but.wasClicked = true
-			but.Draw(true)
+			but.Draw()
 	 	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
 			log.Debug("Button ms handler: release")
+			but.pushed = false
 			but.wasClicked = false
-			but.Draw(false)
+			but.Draw()
 			but.clickHndr(false)
 		} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
 			// release the button if user clicked inside it and then dragged the mouse outside without releasing the mouse button
 			log.Debug("Button ms handler: clicked inside. released outside.")
+			but.pushed = false
 			but.wasClicked = false
-			but.Draw(false)
+			but.Draw()
 		} 
 	}
 }

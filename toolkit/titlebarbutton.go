@@ -45,13 +45,13 @@ func (win *Window) TitleBarButton(ms *mouse.Mouse, fnClick clickHandler, x, y, w
 	
 	ms.RegisterMouse(but.Element.Id, but.Mouse, nil, &but.Element.ScreenX, &but.Element.ScreenY, w, h)
 	
-	but.Draw(nil)
+	but.Draw()
 	
 	return but
 }
 
 
-func (but *TitleBarButton) Draw(data interface{}) {
+func (but *TitleBarButton) Draw() {
 	log.Debug("    Drawing TitleBarButton")
 	
 	gfx.RectFilled(but.parent.Element.Buffer, but.Element.X, but.Element.Y, but.Element.X+but.Element.Width, but.Element.Y+but.Element.Height, but.parent.Element.Width, 80, 130, 0, gfx.A_OPAQUE)	
@@ -70,7 +70,7 @@ func (but *TitleBarButton) Mouse(x int, y int, deltaX int, deltaY int, flags uin
  	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
 		log.Debug("TitleBarButton ms handler: release")
 		but.wasClicked = false
-		but.Draw(nil)
+		but.Draw()
 		but.clickHndr(false)
 	}
 }
