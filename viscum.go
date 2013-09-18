@@ -66,7 +66,7 @@ func main() {
 		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
-	win.Button(toolkit.BS_TEXT, ms, nil, "Click Me", func () { log.Debug("Button clicked!") }, 10, 160, 60, 30)
+	win.Button(toolkit.BS_TEXT, ms, nil, "Click Me", func (_ bool) { log.Debug("Button clicked!") }, 10, 160, 60, 30)
 	
 	f, err := os.Open("data/v.png")
     if err != nil {
@@ -80,8 +80,8 @@ func main() {
 		log.Critical(err)
 		os.Exit(1)
 	}
-	win.Button(toolkit.BS_ICON_TEXT, ms, img, "No! Me!!!", func () { log.Debug("Button clicked!") }, 80, 160, 100, 30)
-	win.Button(toolkit.BS_ICON, ms, img, "", func () { log.Debug("Button clicked!") }, 190, 160, 30, 30)
+	win.Button(toolkit.BS_ICON_TEXT, ms, img, "No! Me!!!", func (_ bool) { log.Debug("Button clicked!") }, 80, 160, 100, 30)
+	win.Button(toolkit.BS_ICON | toolkit.BS_TOGGLE, ms, img, "", func (pushed bool) { log.Debugf("Button toggled! pushed: %t", pushed) }, 190, 160, 30, 30)
 	
 	win.Label(ms, "Testing...", 100, 50, 60, 20)
 	

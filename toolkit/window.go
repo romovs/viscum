@@ -59,7 +59,7 @@ func CreateWindow (style byte, fnCmpWinActivate cmpWinActivateHandler, fb *fbdev
 	ms.RegisterMouse(win.Element.Id, win.Mouse, win.activate, &win.Element.ScreenX, &win.Element.ScreenY, w, h)
 	
 	if !win.tbHidden {
-		win.closeButton = win.TitleBarButton(ms, func() {
+		win.closeButton = win.TitleBarButton(ms, func(_ bool) {
 			log.Debugf("Window %v exiting...", win.Id)
 			// deregister the window
 			win.Element.CompRemoveHdnr(win.Id)

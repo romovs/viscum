@@ -7,4 +7,5 @@ import (
 
 )
 
-type clickHandler func()
+// button click handler. parameter is ignored for non BS_TOGGLE buttons.
+type clickHandler func(bool)

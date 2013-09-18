@@ -71,6 +71,6 @@ func (but *TitleBarButton) Mouse(x int, y int, deltaX int, deltaY int, flags uin
 		log.Debug("TitleBarButton ms handler: release")
 		but.wasClicked = false
 		but.Draw(nil)
-		but.clickHndr()
+		but.clickHndr(false)
 	}
 }

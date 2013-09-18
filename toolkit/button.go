@@ -22,6 +22,7 @@ type Button struct {
 	txt				string
 	style			byte
 	icon 			image.Image
+	pushed			bool			// toggle state
 }
 
 const(
@@ -49,6 +50,7 @@ func (win *Window) Button(style byte, ms *mouse.Mouse, icon image.Image, txt str
 		txt:		txt,
 		style:		style,
 		icon:		icon,
+		pushed:		false,
 	}
 	
 	win.Children.PushFront(but)
@@ -116,19 +118,27 @@ func (but *Button) Draw(isPushed interface{}) {
 // mouse handler
 func (but *Button) Mouse(x int, y int, deltaX int, deltaY int, flags uint16) {
 
-	if (flags & mouse.F_L_CLICK) != 0 {
-		log.Debug("Button ms handler: click")
-		but.wasClicked = true
-		but.Draw(true)
- 	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
-		log.Debug("Button ms handler: release")
-		but.wasClicked = false
-		but.Draw(false)
-		but.clickHndr()
-	} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
-		// release the button if user clicked inside it and then dragged the mouse outside without releasing the mouse button
-		log.Debug("Button ms handler: clicked inside. released outside.")
-		but.wasClicked = false
-		but.Draw(false)
-	} 
+	if but.style & BS_TOGGLE != 0 {
+		if (flags & mouse.F_L_CLICK) != 0 {
+			but.pushed = !but.pushed
+			but.Draw(but.pushed)
+			but.clickHndr(but.pushed)
+		} 
+	} else {
+		if (flags & mouse.F_L_CLICK) != 0 {
+			log.Debug("Button ms handler: click")
+			but.wasClicked = true
+			but.Draw(true)
+	 	} else if but.wasClicked && (flags & mouse.F_L_RELEASE) != 0 {
+			log.Debug("Button ms handler: release")
+			but.wasClicked = false
+			but.Draw(false)
+			but.clickHndr(false)
+		} else if but.wasClicked && (flags & mouse.F_EL_LEAVE) != 0 {
+			// release the button if user clicked inside it and then dragged the mouse outside without releasing the mouse button
+			log.Debug("Button ms handler: clicked inside. released outside.")
+			but.wasClicked = false
+			but.Draw(false)
+		} 
+	}
 }
