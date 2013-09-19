@@ -92,6 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 	cmp.RegisterElement(&win.Element)
+	win.CheckBox(0, ms, "test", func (checked bool) { log.Debugf("CheckBox checked:%t", checked) }, 10, 40)
 	
 	// create test app #3
 	win, err = toolkit.CreateWindow(toolkit.WS_TITLEBAR_HIDDEN, cmp.ActivateWindow, fb, ms, cmp.InvMsgPipe, 300, 150, 150, 150)

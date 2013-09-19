@@ -10,6 +10,7 @@ import (
 	"gfx"
 	"toolkit/base"
 	"container/list"
+	"image/color"
 )
 
 
@@ -21,12 +22,17 @@ type Window struct {
 	cmpWinActHndr	cmpWinActivateHandler
 	closeButton		*TitleBarButton
 	tbHidden		bool
+	bg				color.RGBA
 }
 
 const(
 	WS_TITLEBAR_HIDDEN	= 1 << iota
 )
 
+
+func (win  *Window) GetBG() (color.RGBA) {
+	return win.bg
+}
 
 type cmpWinActivateHandler func(uint64)
 
@@ -40,6 +46,12 @@ func CreateWindow (style byte, fnCmpWinActivate cmpWinActivateHandler, fb *fbdev
 		wasClicked: 		false,
 		cmpWinActHndr:		fnCmpWinActivate,
 		tbHidden:			style & WS_TITLEBAR_HIDDEN != 0,
+		bg:					color.RGBA{
+			R:	241, 
+			G:	240, 
+			B:	238,
+			A:	gfx.A_OPAQUE,
+		},
 	}
 	
 	win.Element = base.Element{
@@ -78,10 +90,10 @@ func CreateWindow (style byte, fnCmpWinActivate cmpWinActivateHandler, fb *fbdev
 
 
 func (win *Window) Draw() {
-	log.Debug("Drawing Window %v", win.Id)
+	log.Debugf("Drawing Window %v", win.Id)
 
 	// window
-	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, 241, 240, 238, gfx.A_OPAQUE)	
+	gfx.RectFilled(win.Element.Buffer, 0, 0, win.Element.Width, win.Element.Height, win.Element.Width, win.bg.R, win.bg.G, win.bg.B, win.bg.A)	
 	gfx.Rect(win.Element.Buffer, 0, 0, win.Element.Width-1, win.Element.Height-1, win.Element.Width, 0, 0, 0, gfx.A_OPAQUE)	
 
 	// title bar
