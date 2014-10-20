@@ -13,11 +13,11 @@ import (
 	"unsafe"
 	"os"
 	"syscall"
-	"utils"
+	"viscum/utils"
 	log "github.com/cihub/seelog"
 	"image"
 	"image/color"
-	"gfx"
+	"viscum/gfx"
 )
 
 

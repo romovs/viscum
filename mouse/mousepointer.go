@@ -4,10 +4,10 @@
 package mouse
 
 import (
-	"fbdev"
-	"gfx"
+	"viscum/fbdev"
+	"viscum/gfx"
 	"time"
-	"toolkit/base"
+	"viscum/toolkit/base"
 	"os"
 	"image"
 	"bufio"

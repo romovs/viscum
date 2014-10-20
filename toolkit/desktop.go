@@ -4,10 +4,10 @@
 package toolkit
 
 import (
-	"fbdev"
-	"mouse"
-	"gfx"
-	"toolkit/base"
+	"viscum/fbdev"
+	"viscum/mouse"
+	"viscum/gfx"
+	"viscum/toolkit/base"
 )
 
 type Desktop struct {

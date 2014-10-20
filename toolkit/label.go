@@ -4,11 +4,11 @@
 package toolkit
 
 import (
-	"fbdev"
-	"mouse"
+	"viscum/fbdev"
+	"viscum/mouse"
 	log "github.com/cihub/seelog"
-	"toolkit/base"
-	"fonts"
+	"viscum/toolkit/base"
+	"viscum/fonts"
 )
 
 

@@ -5,16 +5,16 @@ package main
 
 import (
 	"fmt"
-	"fbdev"
-	"toolkit"
-	"mouse"
-	"utils"
+	"viscum/fbdev"
+	"viscum/toolkit"
+	"viscum/mouse"
+	"viscum/utils"
 	"image"
 	_ "image/png"
 	log "github.com/cihub/seelog"
-	"compositor"
+	"viscum/compositor"
 	"os"
-	"gfx"
+	"viscum/gfx"
 	"bufio"
 )
 

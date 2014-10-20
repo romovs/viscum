@@ -4,11 +4,11 @@
 package toolkit
 
 import (
-	"fbdev"
-	"mouse"
-	"gfx"
-	"toolkit/base"
-	"fonts"
+	"viscum/fbdev"
+	"viscum/mouse"
+	"viscum/gfx"
+	"viscum/toolkit/base"
+	"viscum/fonts"
 	"image"
 )
 

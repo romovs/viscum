@@ -4,10 +4,10 @@
 package compositor
 
 import (
-	"fbdev"
+	"viscum/fbdev"
 	"container/list"
-	"toolkit/base"
-	"gfx"
+	"viscum/toolkit/base"
+	"viscum/gfx"
 )
 
 type Compositor struct {

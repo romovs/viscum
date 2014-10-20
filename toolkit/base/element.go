@@ -9,7 +9,7 @@
 package base
 
 import (
-	"gfx"
+	"viscum/gfx"
 	"image/color"
 	"image"
 	"container/list"

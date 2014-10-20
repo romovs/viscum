@@ -12,11 +12,11 @@ import (
 	"os"
 	"bytes"
 	"encoding/binary"
-	"fbdev"
+	"viscum/fbdev"
 	log "github.com/cihub/seelog"
-	"utils"
+	"viscum/utils"
 	"container/list"
-	"toolkit/base"
+	"viscum/toolkit/base"
 	"time"
 )
 
